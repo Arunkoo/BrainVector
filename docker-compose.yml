@@ -1,4 +1,18 @@
 services:
+  redis:
+    image: redis:6.2-alpine # Lightweight Redis image
+    container_name: brainvector-redis
+    restart: always
+    # Expose the default Redis port
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data # Volume for Redis persistence
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
   postgres:
     image: postgres:14
     restart: always
@@ -50,3 +64,4 @@ services:
       - postgres
 volumes:
   pgdata:
+  redisdata:
