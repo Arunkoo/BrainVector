@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
@@ -9,10 +10,55 @@ import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { LoginDto } from './dto/login.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from '@nestjs/cache-manager';
 
+type UserWithoutPassword = {
+  id: string;
+  email: string;
+  name: string;
+  role: 'User' | 'Admin';
+};
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    // Injected cache manager service,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
+
+  //finding User By Id using cache Aside pattern..
+  async findUserId(userId: string): Promise<UserWithoutPassword | null> {
+    const cacheKey = `user_by_id:${userId}`;
+    const ttlSeconds = 3600;
+
+    //check caahe..
+    const cachedUser = await this.cacheManager.get(cacheKey);
+    if (cachedUser) {
+      console.log(`[Cache Hit] Serving User ${userId} from Redis.`);
+      return JSON.parse(cachedUser as string) as UserWithoutPassword;
+    }
+
+    //if not cahche present..
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      return null;
+    }
+
+    //saving to cache for next time...
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordhash: _, ...userToCache } = user;
+
+    await this.cacheManager.set(
+      cacheKey,
+      JSON.stringify(userToCache),
+      ttlSeconds * 1000,
+    );
+    console.log(`[Cache Miss] User ${userId} fetched from DB and cached.`);
+    return userToCache as UserWithoutPassword;
+  }
 
   // Generate JWT
   private generateJwt(userId: string, role: string) {
@@ -38,6 +84,11 @@ export class AuthService {
         },
       });
 
+      //cache invalidation..
+      await this.cacheManager.del(`user_by_id:${user.id}`);
+      console.log(
+        `[Cache Invalidation] Cleared cache for new user ${user.id} on register.`,
+      );
       const token = this.generateJwt(user.id, user.role);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { passwordhash: _, ...userWithoutPassword } = user;
