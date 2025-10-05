@@ -12,13 +12,8 @@ import { LoginDto } from './dto/login.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from '@nestjs/cache-manager';
+import { UserWithoutPassword } from 'src/types/userWithoutPasswordType';
 
-type UserWithoutPassword = {
-  id: string;
-  email: string;
-  name: string;
-  role: 'User' | 'Admin';
-};
 @Injectable()
 export class AuthService {
   constructor(
