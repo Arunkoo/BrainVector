@@ -1,5 +1,10 @@
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDocumentDto } from './dto/document.dto';
 
@@ -44,5 +49,25 @@ export class DocumentService {
       },
       include: { createdBy: true },
     });
+  }
+
+  //find one document...
+  async findOne(userId: string, workspaceId: string, documentId: string) {
+    await this.checkWorkspaceMembership(userId, workspaceId);
+
+    const document = await this.prisma.document.findUnique({
+      where: {
+        id: documentId,
+        workspaceId: workspaceId,
+      },
+      include: { createdBy: true },
+    });
+
+    if (!document) {
+      throw new NotFoundException(
+        `Document with Id "${documentId}" not found in workspace with id as "${workspaceId}"`,
+      );
+    }
+    return document;
   }
 }
