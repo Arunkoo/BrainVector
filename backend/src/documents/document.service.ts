@@ -1,6 +1,7 @@
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateDocumentDto } from './dto/document.dto';
 
 @Injectable()
 export class DocumentService {
@@ -24,5 +25,24 @@ export class DocumentService {
       );
     }
     return membership;
+  }
+
+  //create document under specified workspace..
+  async createDocument(
+    userId: string,
+    workspaceId: string,
+    dto: CreateDocumentDto,
+  ) {
+    await this.checkWorkspaceMembership(userId, workspaceId);
+
+    return this.prisma.document.create({
+      data: {
+        title: dto.title,
+        content: dto.content || '',
+        workspace: { connect: { id: workspaceId } },
+        createdBy: { connect: { id: userId } },
+      },
+      include: { createdBy: true },
+    });
   }
 }
