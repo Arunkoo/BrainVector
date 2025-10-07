@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDocumentDto } from './dto/document.dto';
+import { UpdateDocumentDto } from './dto/updateDocument.dto';
 
 @Injectable()
 export class DocumentService {
@@ -69,5 +70,29 @@ export class DocumentService {
       );
     }
     return document;
+  }
+
+  //find all documents...
+  async findAll(userId: string, workspaceId: string) {
+    await this.checkWorkspaceMembership(userId, workspaceId);
+
+    return this.prisma.document.findMany({
+      where: { workspaceId: workspaceId },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+      include: { createdBy: true },
+    });
+  }
+
+  //update documents...
+  async UpdateDocument(documentId: string, dto: UpdateDocumentDto) {
+    // TODO: REAL TIME COLLABORATION..
+    const updatedDocument = await this.prisma.document.update({
+      where: { id: documentId },
+      data: dto,
+    });
+
+    return updatedDocument;
   }
 }
