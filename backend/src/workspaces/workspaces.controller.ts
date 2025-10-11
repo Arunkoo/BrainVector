@@ -61,10 +61,11 @@ export class WorkspaceController {
     console.log('Invited user details..', dto.invitedUserId);
     const invitedUserId = dto.invitedUserId;
     try {
-      return await this.workspaceService.inviteUserToWorkspace(
+      await this.workspaceService.inviteUserToWorkspace(
         workspaceId,
         invitedUserId,
       );
+      return { id: invitedUserId };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;

@@ -1,21 +1,31 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-
 import request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { Server } from 'http';
 import { AppModule } from '../../src/app.module';
 
 // Define the structure of the response body for both register and login
-// This structure is based on the 'Received value' in your error log.
 interface UserResponse {
   id: string;
   name: string | null;
   email: string;
-  role: string; // Expected: "User"
+  role: string;
   createdAt: string;
   updatedAt: string;
 }
+
+// --- Test Setup Variables ---
+const TEST_USER_DATA = {
+  name: 'John Doe',
+  email: 'test@example.com',
+  password: 'password123',
+};
+const LOGIN_DATA = {
+  email: TEST_USER_DATA.email,
+  password: TEST_USER_DATA.password,
+};
+const BASE_AUTH_URL = '/api/auth';
 
 describe('Auth E2E', () => {
   let app: INestApplication;
@@ -28,11 +38,8 @@ describe('Auth E2E', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
-
-    // Set global prefix /api
     app.setGlobalPrefix('api');
 
-    // Enable validation globally
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -41,12 +48,10 @@ describe('Auth E2E', () => {
     );
 
     await app.init();
-
     httpServer = app.getHttpServer() as Server;
-
     prisma = app.get(PrismaService);
 
-    // Clean up database tables in the correct order due to foreign key constraints
+    // Clean up database tables
     await prisma.document.deleteMany();
     await prisma.workspaceMember.deleteMany();
     await prisma.workspace.deleteMany();
@@ -60,80 +65,57 @@ describe('Auth E2E', () => {
   // -------------------------------
   // Register Tests
   // -------------------------------
-  describe('POST /api/auth/register', () => {
+  describe(`POST ${BASE_AUTH_URL}/register`, () => {
     it('should register a new user and assign default role "User"', async () => {
-      const registerData = {
-        name: 'John Doe',
-        email: 'test@example.com',
-        password: 'password123',
-      };
-
+      // NOTE: This test creates the user necessary for the Login tests below
       const res = await request(httpServer)
-        .post('/api/auth/register')
-        .send(registerData)
-        .expect(201);
+        .post(`${BASE_AUTH_URL}/register`)
+        .send(TEST_USER_DATA)
+        .expect(HttpStatus.CREATED);
 
-      // Adapt the test to expect the raw User object in the body
       const body = res.body as UserResponse;
 
-      // Check the user object details (directly on the body)
       expect(body).toHaveProperty('id');
-      expect(body.email).toBe(registerData.email);
-      expect(body.name).toBe(registerData.name);
-
-      // *** Role Verification ***
+      expect(body.email).toBe(TEST_USER_DATA.email);
+      expect(body.name).toBe(TEST_USER_DATA.name);
       expect(body.role).toBe('User');
     });
 
     it('should fail if email already exists', async () => {
       await request(httpServer)
-        .post('/api/auth/register')
-        .send({
-          name: 'John Doe',
-          email: 'test@example.com', // Duplicate email
-          password: 'password123',
-        })
-        .expect(400); // BadRequestException for duplicate email
+        .post(`${BASE_AUTH_URL}/register`)
+        .send(TEST_USER_DATA)
+        .expect(HttpStatus.BAD_REQUEST);
     });
   });
 
   // -------------------------------
   // Login Tests
   // -------------------------------
-  describe('POST /api/auth/login', () => {
+  describe(`POST ${BASE_AUTH_URL}/login`, () => {
     it('should login with correct credentials, return user, and set cookie', async () => {
-      const loginData = {
-        email: 'test@example.com',
-        password: 'password123',
-      };
-
       const res = await request(httpServer)
-        .post('/api/auth/login')
-        .send(loginData)
-        .expect(201);
+        .post(`${BASE_AUTH_URL}/login`)
+        .send(LOGIN_DATA)
 
-      // Adapt the test to expect the raw User object in the body
+        .expect(HttpStatus.CREATED)
+        .expect('set-cookie', /jwt=/i);
+
       const body = res.body as UserResponse;
 
-      // The error log showed this structure, so we check it directly
       expect(body).toHaveProperty('id');
-      expect(body.email).toBe(loginData.email);
-
-      // *** Role Verification ***
+      expect(body.email).toBe(LOGIN_DATA.email);
       expect(body.role).toBe('User');
-
-      // Check for the cookie (where the token is likely stored)
-      expect(res.headers['set-cookie']).toBeDefined();
     });
 
     it('should fail if password is wrong', async () => {
       await request(httpServer)
-        .post('/api/auth/login')
+        .post(`${BASE_AUTH_URL}/login`)
         .send({
-          email: 'test@example.com',
+          email: LOGIN_DATA.email,
           password: 'wrongpassword',
         })
-        .expect(401); // UnauthorizedException
+        .expect(HttpStatus.UNAUTHORIZED); // 401 for bad credentials
     });
   });
 });
