@@ -86,13 +86,60 @@ export class DocumentService {
   }
 
   //update documents...
-  async UpdateDocument(documentId: string, dto: UpdateDocumentDto) {
-    // TODO: REAL TIME COLLABORATION..
+  async UpdateDocument(
+    userId: string,
+    workspaceId: string,
+    documentId: string,
+    dto: UpdateDocumentDto,
+  ) {
+    await this.checkWorkspaceMembership(userId, workspaceId);
+    const existingDocument = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
+    if (!existingDocument) {
+      throw new NotFoundException(`Document with ID "${documentId}" not found`);
+    }
+    if (existingDocument.workspaceId != workspaceId) {
+      throw new ForbiddenException(
+        `Document does not belong to this workspace`,
+      );
+    }
     const updatedDocument = await this.prisma.document.update({
       where: { id: documentId },
       data: dto,
     });
 
     return updatedDocument;
+  }
+
+  //delete Documents....
+  async deleteDocument(
+    userId: string,
+    workspaceId: string,
+    documentId: string,
+  ) {
+    const membership = await this.checkWorkspaceMembership(userId, workspaceId);
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId, workspaceId: workspaceId },
+    });
+    if (!document) {
+      throw new NotFoundException('Document not found.');
+    }
+
+    //Authorization check....
+    const isOwner = membership.role === 'Owner';
+    const isCreator = document.createdById === userId;
+
+    if (!isOwner && !isCreator) {
+      throw new ForbiddenException(
+        'You must be the document creator or a workspace owner to delete this document.',
+      );
+    }
+
+    await this.prisma.document.delete({
+      where: { id: documentId },
+    });
+
+    return { message: 'Document successfully deleted.' };
   }
 }
