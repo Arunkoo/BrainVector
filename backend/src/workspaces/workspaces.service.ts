@@ -7,7 +7,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
-import { UserWithoutPassword } from 'src/types/userWithoutPasswordType';
+import type { UserWithoutPassword } from 'src/types/userWithoutPasswordType';
 
 @Injectable()
 export class WorkspaceService {
@@ -39,7 +39,18 @@ export class WorkspaceService {
 
       include: {
         members: {
-          include: { user: true },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+          },
         },
       },
     });
@@ -64,7 +75,18 @@ export class WorkspaceService {
       },
       include: {
         workspace: {
-          include: { owner: true },
+          include: {
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+          },
         },
       },
     });
@@ -127,7 +149,16 @@ export class WorkspaceService {
         user: { connect: { id: inviteUserId } },
       },
       include: {
-        user: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
       },
     });
   }
