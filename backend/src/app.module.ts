@@ -6,6 +6,7 @@ import { WorkspaceModule } from './workspaces/workspaces.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
+import { DocumentModule } from './documents/document.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { redisStore } from 'cache-manager-redis-store';
     UserModule,
     AuthModule,
     WorkspaceModule,
+    DocumentModule,
   ],
   controllers: [],
   providers: [],
