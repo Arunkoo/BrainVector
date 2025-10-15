@@ -14,6 +14,13 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from '@nestjs/cache-manager';
 import { UserWithoutPassword } from 'src/types/userWithoutPasswordType';
 
+interface JwtPayload {
+  userId: string;
+  role: string;
+  iat?: number;
+  exp?: number;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -115,5 +122,31 @@ export class AuthService {
     const { passwordhash: _, ...userWithoutPassword } = user;
 
     return { user: userWithoutPassword, token };
+  }
+
+  //verfiy jwt for internal utility  functions....
+  verifyJwt(token: string): JwtPayload {
+    try {
+      const jwtSecret = process.env.JWT_SECRET;
+
+      if (!jwtSecret) {
+        throw new Error('JWT_SECRET environment variable is not defined');
+      }
+
+      if (!token || token.trim().length === 0) {
+        throw new Error('Token is empty or invalid');
+      }
+
+      const payload = jwt.verify(token, jwtSecret) as JwtPayload;
+
+      return payload;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      throw new UnauthorizedException(
+        `Invalid or expired JWT token: ${errorMessage}`,
+      );
+    }
   }
 }
