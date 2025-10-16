@@ -1,5 +1,7 @@
 import { Logger, UseFilters } from '@nestjs/common';
 import {
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -39,6 +41,7 @@ export class RealTimeGateWay
   //map to store which user is in which document room..
   private userToDocumentMap = new Map<string, string>(); //socket id----> documentId;
   private socketToUserMap = new Map<string, string>();
+  private documentToWorkspaceMap = new Map<string, string>();
   constructor(
     private authService: AuthService,
     private documentService: DocumentService,
@@ -81,6 +84,8 @@ export class RealTimeGateWay
       //join room:  if authorized, add the socket to document room..
       await client.join(documentId);
       this.userToDocumentMap.set(client.id, documentId);
+      this.socketToUserMap.set(client.id, payload.userId);
+      this.documentToWorkspaceMap.set(documentId, workspaceId);
       this.logger.log(`User ${payload.userId} connect to room: ${documentId}`);
 
       client.to(documentId).emit('userJoined', {
@@ -107,6 +112,7 @@ export class RealTimeGateWay
       });
       await client.leave(documentId);
       this.userToDocumentMap.delete(client.id);
+      this.socketToUserMap.delete(client.id);
       this.logger.log(
         `User ${user?.userId || client.id} disconneted from room: ${documentId}`,
       );
@@ -116,4 +122,44 @@ export class RealTimeGateWay
   //real Time collaboration logic....
 
   //main logic to handle the text update...  amybe a cursor upfdate also...
+  @SubscribeMessage('documentUpdate')
+  async handleDocumentUpdate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    payload: { documentId: string; newContent: string },
+  ) {
+    const { documentId, newContent } = payload;
+    const user = (client as AuthenticatedSocket).user;
+
+    if (!user || this.userToDocumentMap.get(client.id) !== documentId) {
+      return this.logger.warn(
+        `Unauthorized update attempt by socket ${client.id}`,
+      );
+    }
+
+    const workspaceId = this.documentToWorkspaceMap.get(documentId);
+    if (!workspaceId) {
+      return this.logger.warn(
+        `Workspace not found for the user with ${documentId}`,
+      );
+    }
+
+    //Broadcast the changes to all other connected client in the rooms...
+    client.to(documentId).emit('contentChange', {
+      userId: user.userId,
+      content: newContent,
+      timestamp: new Date().toISOString(),
+    });
+
+    //save the changes in docs..
+    await this.documentService.UpdateDocument(
+      user.userId,
+      workspaceId,
+      documentId,
+      {
+        content: newContent,
+      },
+    );
+    this.logger.verbose(`User ${user.userId} updated document ${documentId}`);
+  }
 }
