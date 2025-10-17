@@ -161,5 +161,30 @@ export class RealTimeGateWay
       },
     );
     this.logger.verbose(`User ${user.userId} updated document ${documentId}`);
+    return { status: 'success', message: 'Update broadcasted.' };
+  }
+
+  //handle cursor updates....
+  @SubscribeMessage('cursorUpdate')
+  handleCursorUpdate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { documentId: string; position: number },
+  ) {
+    const user = (client as AuthenticatedSocket).user;
+
+    if (!user || this.userToDocumentMap.get(client.id) !== payload.documentId) {
+      this.logger.warn(`Unauthorized update attempt by client ${client.id}`);
+      return;
+    }
+
+    client.to(payload.documentId).emit('cursorChange', {
+      userId: user.userId,
+      position: payload.position,
+      timeStamp: new Date().toISOString(),
+    });
+
+    this.logger.verbose(
+      `User ${user.userId} moved cursor in document ${payload.documentId}`,
+    );
   }
 }
