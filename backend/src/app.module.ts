@@ -7,6 +7,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
 import { DocumentModule } from './documents/document.module';
+import { RealTimeModule } from './real-Time/real-Time.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { DocumentModule } from './documents/document.module';
     AuthModule,
     WorkspaceModule,
     DocumentModule,
+    RealTimeModule,
   ],
   controllers: [],
   providers: [],
