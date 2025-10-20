@@ -1,9 +1,10 @@
 import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+
 import request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { Server } from 'http';
-import { AppModule } from '../../src/app.module';
+
+import { createTestModule } from '../setUp';
 
 // Define the structure of the response body for both register and login
 interface UserResponse {
@@ -33,9 +34,7 @@ describe('Auth E2E', () => {
   let httpServer: Server;
 
   beforeAll(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    const moduleRef = await createTestModule().compile();
 
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('api');
