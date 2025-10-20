@@ -1,11 +1,12 @@
 import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+
 import { Server } from 'http';
-import { AppModule } from '../../src/app.module';
+
 import { PrismaService } from '../../src/prisma/prisma.service';
 import request, { SuperAgentTest } from 'supertest';
 import cookieParser from 'cookie-parser';
 import { WorkspaceRole } from '@prisma/client';
+import { createTestModule } from '../setUp';
 
 // --- Interfaces & Types (mimicking service/controller response) ---
 interface AuthResponse {
@@ -56,9 +57,7 @@ let DOC_BASE_URL: string; // Changed to 'let' and initialized within beforeAll
 
 describe('DocumentController (E2E Integrated)', () => {
   beforeAll(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    const moduleRef = await createTestModule().compile();
 
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('api');
