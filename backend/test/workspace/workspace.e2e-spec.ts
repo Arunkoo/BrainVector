@@ -1,13 +1,14 @@
 import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+
 import { Server } from 'http';
-import { AppModule } from '../../src/app.module';
+
 import { PrismaService } from '../../src/prisma/prisma.service';
 import request, { SuperAgentTest } from 'supertest';
 import { CreateWorkspaceDto } from '../../src/workspaces/dto/create-workspace.dto';
 import { WorkspaceRole } from '@prisma/client';
 import { InviteUserDto } from 'src/workspaces/dto/invite-user.dto';
 import cookieParser from 'cookie-parser';
+import { createTestModule } from '../setUp';
 
 interface CreateWorkspaceResponse {
   id: string;
@@ -52,9 +53,7 @@ describe('WorkspaceController (E2E with Cookie Auth)', () => {
   let arunAuthCookie: string | undefined;
 
   beforeAll(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    const moduleRef = await createTestModule().compile();
 
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('api');
