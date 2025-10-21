@@ -14,6 +14,7 @@ import { RealTimeModule } from './real-Time/real-Time.module';
     //load configuration from .env files golbally..
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
 
     //2. stepup caching using Redis Store..
