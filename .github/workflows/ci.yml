@@ -1,4 +1,4 @@
-name: CI - Backend (E2E Only)
+name: CI pipeLine
 
 on:
   push:
@@ -7,62 +7,47 @@ on:
     branches: ["*"]
 
 jobs:
-  e2e-tests:
+  test:
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres:14
-        ports:
-          - 5432:5432
+        image: postgres:15
         env:
           POSTGRES_USER: arun
           POSTGRES_PASSWORD: 12arun
           POSTGRES_DB: BrainVector
-        options: >-
-          --health-cmd="pg_isready -U arun -d BrainVector"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-      redis:
-        image: redis:6.2-alpine
         ports:
-          - 6379:6379
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U arun -d BrainVector"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: "npm"
-          cache-dependency-path: backend/package-lock.json
+          node-version: 20
 
-      - name: Install backend dependencies
+      - name: Install dependencies
         working-directory: backend
-        run: npm install
+        run: npm ci
 
-      - name: Setup Prisma
+      - name: Run database migrations
         working-directory: backend
-        env:
-          DATABASE_URL: postgres://arun:12arun@localhost:5432/BrainVector
-        run: |
-          npx prisma generate
-          npx prisma migrate deploy
-
-      - name: Lint code
-        working-directory: backend
-        run: npm run lint
+        run: npx prisma migrate deploy
 
       - name: Run E2E tests
         working-directory: backend
         env:
           DATABASE_URL: postgres://arun:12arun@localhost:5432/BrainVector
           NODE_ENV: test
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
-          echo "Loading .env variables..."
-          export $(grep -v '^#' .env | xargs)   # ✅ Load all .env variables
+          echo "✅ Loading environment variables..."
+          export $(grep -v '^#' .env | xargs) || true
           npm run test:e2e
