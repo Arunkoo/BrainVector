@@ -62,4 +62,7 @@ jobs:
         env:
           DATABASE_URL: postgres://arun:12arun@localhost:5432/BrainVector
           NODE_ENV: test
-        run: npm run test:e2e
+        run: |
+          echo "Loading .env variables..."
+          export $(grep -v '^#' .env | xargs)   # ✅ Load all .env variables
+          npm run test:e2e
