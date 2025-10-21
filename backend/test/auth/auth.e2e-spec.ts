@@ -58,7 +58,9 @@ describe('Auth E2E', () => {
   }, 30000);
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   // -------------------------------

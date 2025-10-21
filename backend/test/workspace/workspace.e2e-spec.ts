@@ -111,7 +111,9 @@ describe('WorkspaceController (E2E with Cookie Auth)', () => {
   }, 30000);
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   // ---------------- Unauthorized Tests ----------------

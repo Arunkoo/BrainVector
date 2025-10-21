@@ -121,7 +121,9 @@ describe('DocumentController (E2E Integrated)', () => {
   }, 30000);
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   // DOC_BASE_URL is now correctly initialized in beforeAll
