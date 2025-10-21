@@ -1,4 +1,4 @@
-name: CI pipeLine
+name: CI
 
 on:
   push:
@@ -9,6 +9,13 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: postgres://arun:12arun@localhost:5432/BrainVector
+      NODE_ENV: test
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
     services:
       postgres:
@@ -25,10 +32,16 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-    steps:
-      - uses: actions/checkout@v4
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
 
-      - name: Set up Node.js
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -37,17 +50,16 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      - name: Run database migrations
+      - name: Setup Prisma
         working-directory: backend
-        run: npx prisma migrate deploy
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+
+      - name: Lint code
+        working-directory: backend
+        run: npm run lint
 
       - name: Run E2E tests
         working-directory: backend
-        env:
-          DATABASE_URL: postgres://arun:12arun@localhost:5432/BrainVector
-          NODE_ENV: test
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        run: |
-          echo "✅ Loading environment variables..."
-          export $(grep -v '^#' .env | xargs) || true
-          npm run test:e2e
+        run: npm run test:e2e
