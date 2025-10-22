@@ -2,7 +2,7 @@
 
 Production-grade collaborative workspace with real-time document sync and AI analysis capabilities.
 
-**Status:** Backend Complete | Real-Time Infrastructure Ready | E2E Tests Passing | Dockerized
+**Status:** Backend Complete | Real-Time Infrastructure Ready | E2E Tests Passing | Dockerized | CI pipeline with github actions
 
 ---
 
@@ -18,8 +18,8 @@ BrainVector is a full-stack backend system for real-time document collaboration.
 - **Framework:** NestJS
 - **Database:** PostgreSQL with Prisma ORM
 - **Cache:** Redis
-- **Real-Time:** WebSocket
-- **Testing:** Jest (E2E)
+- **Real-Time:** Socket.io
+- **Testing:** Jest (E2E) | supertest
 - **Containerization:** Docker & Docker Compose
 
 ---
@@ -69,9 +69,9 @@ BrainVector is a full-stack backend system for real-time document collaboration.
 - Authentication flows (signup, login, token refresh, logout)
 - Workspace operations (create, invite, permissions)
 - Document operations (create, update, delete, access control)
-- Real-time collaboration (multiple user sessions, live sync) //to be decided to implement..
-- WebSocket connection and reconnection //pending..
-- Permission enforcement //pending ..
+- Real-time collaboration (multiple user sessions, live sync)
+- WebSocket connection and reconnection
+- Permission enforcement
 
 Run tests:
 
@@ -207,7 +207,7 @@ test/
 
 - AI integration (Gemini RAG) for document Q&A
 - Frontend application (React)
-- CI/CD pipeline with GitHub Actions
+- CD pipeline with GitHub Actions
 - Advanced conflict resolution for concurrent edits
 - User presence indicators
 
