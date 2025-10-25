@@ -62,6 +62,16 @@ services:
       - "8080:80"
     depends_on:
       - postgres
+  frontend:
+    build:
+      context: ./client
+      dockerfile: dockerFile
+    container_name: BrainVector_Client
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: always
 volumes:
   pgdata:
   redisdata:
