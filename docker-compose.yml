@@ -62,7 +62,7 @@ services:
       - "8080:80"
     depends_on:
       - postgres
-  frontend:
+  Client:
     build:
       context: ./client
       dockerfile: dockerFile
