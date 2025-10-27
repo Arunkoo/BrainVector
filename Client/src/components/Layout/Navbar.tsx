@@ -1,9 +1,9 @@
 const Navbar = () => {
   return (
-    <nav className="flex flex-row p-3 justify-between h-24">
+    <div className=" min-w-full h-[77px] bg-red-500 flex  justify-between items-center px-4 py-2  border-b ">
       <div>logo</div>
       <div>button</div>
-    </nav>
+    </div>
   );
 };
 
