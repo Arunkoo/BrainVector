@@ -78,7 +78,7 @@ jobs:
           cache: "npm"
       - name: Install frontend dependencies
         working-directory: Client
-        run: npm CI
+        run: npm ci
 
       - name: Lint frontend
         working-directory: Client
