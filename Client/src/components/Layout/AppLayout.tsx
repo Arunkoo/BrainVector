@@ -4,11 +4,11 @@ import SideBar from "./SideBar";
 
 const AppLayout = () => {
   return (
-    <div className="flex gap-1 flex-col min-h-screen text-foreground bg-background lg:ml-[120px] md:ml-[60px] ml-5 mt-1.5  lg:mr-[120px] md:mr-[60px] mr-5">
+    <div className="flex gap-1 flex-col min-h-screen text-foreground bg-accent lg:ml-40 md:ml-[60px] lg:mr-40 ml-5 md:mr-[60px] mr-5 mt-6">
       <Navbar />
       <div className="flex flex-1 w-full">
         <SideBar />
-        <main className="bg-amber-800 w-full md:w-[75%]">
+        <main className=" w-full md:w-[75%]">
           <Outlet />
           <h1>Hello</h1>
         </main>
