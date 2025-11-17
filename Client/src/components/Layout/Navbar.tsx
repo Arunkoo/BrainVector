@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 
 const Navbar = () => {
   return (
-    <nav className="w-full h-16 md:h-[77px]  bg-gray-500/15 border-b flex items-center justify-between px-4 py-2 rounded-2xl">
+    <nav className="w-full h-16 md:h-[77px] bg-white/40 border-b flex items-center justify-between px-4 py-2 rounded-2xl">
       {/* Logo Section */}
       <div className="flex items-center gap-2">
         <img
