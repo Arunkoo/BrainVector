@@ -48,10 +48,13 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const user = await authApi.login(credentials);
       set({ user, isLoading: false });
     } catch (err: unknown) {
-      const errorMessage =
-        err && axios.isAxiosError(err)
-          ? err.response?.data?.message || "Login failed"
-          : "An unknown error occurred";
+      let errorMessage = "An unknown error occurred";
+
+      if (axios.isAxiosError(err) && err.response) {
+        errorMessage =
+          (err.response.data as { message?: string })?.message ||
+          "Login failed";
+      }
       set({ user: null, error: errorMessage, isLoading: false });
       throw err;
     }
@@ -63,10 +66,13 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const user = await authApi.register(userData);
       set({ user, isLoading: false });
     } catch (err: unknown) {
-      const errorMessage =
-        err && axios.isAxiosError(err)
-          ? err.response?.data?.message || "Registration failed!"
-          : "An unknown error occurred";
+      let errorMessage = "An unknown error occurred";
+
+      if (axios.isAxiosError(err) && err.response) {
+        errorMessage =
+          (err.response.data as { message?: string })?.message ||
+          "Registration failed";
+      }
       set({ user: null, error: errorMessage, isLoading: false });
       throw err;
     }
