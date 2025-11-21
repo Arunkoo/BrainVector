@@ -1,113 +1,72 @@
 import { create } from "zustand";
+import type { StateCreator } from "zustand";
 import type { User } from "../types";
 import { authApi } from "../api/auth.api";
-import axios from "axios";
 
-interface AuthState {
+interface Credentials {
+  email: string;
+  password: string;
+}
+
+interface AuthStore {
   user: User | null;
   isLoading: boolean;
   isCheckingAuth: boolean;
   error: string | null;
-}
 
-//Defining the interface for the store actions
-interface AuthActions {
-  // Authentication methods
-  login: (credentials: { email: string; password: string }) => Promise<void>;
-  register: (userData: {
-    name: string;
-    email: string;
-    password: string;
-  }) => Promise<void>;
-  logout: () => Promise<void>;
-
-  // Initial check method
   checkAuthStatus: () => Promise<void>;
-
-  //Utility..
+  login: (data: Credentials) => Promise<void>;
+  logout: () => Promise<void>;
   clearError: () => void;
 }
 
-type AuthStore = AuthState & AuthActions;
+/* ---------- Strongly typed Set/Get ---------- */
 
-//creating a zustand store
+type StoreSet = Parameters<StateCreator<AuthStore>>[0];
+// type StoreGet = Parameters<StateCreator<AuthStore>>[1];
+
+const checkAuthStatusFn = async (set: StoreSet) => {
+  set({ isCheckingAuth: true });
+
+  try {
+    const user = await authApi.checkAuth();
+    set({ user, isCheckingAuth: false });
+  } catch {
+    set({ user: null, isCheckingAuth: false });
+  }
+};
+
+const loginFn = async (set: StoreSet, data: Credentials) => {
+  set({ isLoading: true, error: null });
+
+  try {
+    const user = await authApi.login(data);
+    set({ user, isLoading: false });
+  } catch {
+    set({
+      user: null,
+      error: "Invalid email or password",
+      isLoading: false,
+    });
+    throw new Error("Login failed");
+  }
+};
+
+const logoutFn = async (set: StoreSet) => {
+  await authApi.logout();
+  set({ user: null });
+};
+
+/* ---------- Zustand Store ---------- */
 
 export const useAuthStore = create<AuthStore>((set) => ({
-  //state...
   user: null,
   isLoading: false,
   isCheckingAuth: true,
   error: null,
-  //Actions...
 
+  checkAuthStatus: () => checkAuthStatusFn(set),
+  login: (data) => loginFn(set, data),
+  logout: () => logoutFn(set),
   clearError: () => set({ error: null }),
-
-  login: async (credentials) => {
-    set({ isLoading: true, error: null });
-    try {
-      const user = await authApi.login(credentials);
-      set({ user, isLoading: false });
-    } catch (err: unknown) {
-      let errorMessage = "An unknown error occurred";
-
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage =
-          (err.response.data as { message?: string })?.message ||
-          "Login failed";
-      }
-      set({ user: null, error: errorMessage, isLoading: false });
-      throw err;
-    }
-  },
-
-  register: async (userData) => {
-    set({ isLoading: true, error: null });
-    try {
-      const user = await authApi.register(userData);
-      set({ user, isLoading: false });
-    } catch (err: unknown) {
-      let errorMessage = "An unknown error occurred";
-
-      if (axios.isAxiosError(err) && err.response) {
-        errorMessage =
-          (err.response.data as { message?: string })?.message ||
-          "Registration failed";
-      }
-      set({ user: null, error: errorMessage, isLoading: false });
-      throw err;
-    }
-  },
-
-  logout: async () => {
-    set({ isLoading: true });
-    try {
-      await authApi.logout();
-      set({ user: null, isLoading: false });
-    } catch {
-      set({ user: null, isLoading: false });
-    }
-  },
-  checkAuthStatus: async () => {
-    set({ isCheckingAuth: true });
-    try {
-      const user = await authApi.checkAuth();
-      set({ user, isCheckingAuth: false });
-    } catch {
-      set({ user: null, isCheckingAuth: false });
-    }
-  },
 }));
-
-// Optional: Custom hook for cleaner component access
-export const useAuth = () =>
-  useAuthStore((state) => ({
-    user: state.user,
-    isLoggedIn: !!state.user,
-    isLoading: state.isLoading,
-    isCheckingAuth: state.isCheckingAuth,
-    error: state.error,
-    login: state.login,
-    logout: state.logout,
-    register: state.register,
-    clearError: state.clearError,
-  }));
