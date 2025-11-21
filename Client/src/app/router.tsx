@@ -5,6 +5,7 @@ import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import DashBoard from "../pages/DashBoard";
+import SignupPage from "../pages/SignupPage";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
         path: "Login",
         element: <LoginPage />,
       },
+      { path: "Register", element: <SignupPage /> },
       {
         path: "dashboard",
         element: (

@@ -15,7 +15,7 @@ import {
 } from "../components/ui/field";
 import { Input } from "../components/ui/input";
 
-export function LoginForm({
+export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -23,12 +23,18 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>Login to your account</CardDescription>
+          <CardTitle className="text-xl">Create your account</CardTitle>
+          <CardDescription>
+            Enter your email below to create your account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form>
             <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="name">Full Name</FieldLabel>
+                <Input id="name" type="text" placeholder="John Doe" required />
+              </Field>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
@@ -39,26 +45,26 @@ export function LoginForm({
                 />
               </Field>
               <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-                <Input id="password" type="password" required />
+                <Field>
+                  <Field>
+                    <FieldLabel htmlFor="password">Password</FieldLabel>
+                    <Input id="password" type="password" required />
+                  </Field>
+                  {/* <Field>
+                    <FieldLabel htmlFor="confirm-password">
+                      Confirm Password
+                    </FieldLabel>
+                    <Input id="confirm-password" type="password" required />
+                  </Field> */}
+                </Field>
+                <FieldDescription>
+                  Must be at least 6 characters long.
+                </FieldDescription>
               </Field>
               <Field>
-                <Button
-                  type="submit"
-                  className="bg-black text-white cursor-pointer hover:bg-black/95 hover:text-white/95"
-                >
-                  Login
-                </Button>
+                <Button type="submit">Create Account</Button>
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="/Register">Sign up</a>
+                  Already have an account? <a href="/Login">Login</a>
                 </FieldDescription>
               </Field>
             </FieldGroup>
