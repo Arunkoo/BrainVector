@@ -62,7 +62,12 @@ export function SignupForm({
                 </FieldDescription>
               </Field>
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button
+                  type="submit"
+                  className="bg-black text-white cursor-pointer hover:bg-black/95 hover:text-white/95"
+                >
+                  Create Account
+                </Button>
                 <FieldDescription className="text-center">
                   Already have an account? <a href="/Login">Login</a>
                 </FieldDescription>

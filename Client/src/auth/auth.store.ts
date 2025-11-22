@@ -2,10 +2,17 @@ import { create } from "zustand";
 import type { StateCreator } from "zustand";
 import type { User } from "../types";
 import { authApi } from "../api/auth.api";
+import axios, { AxiosError } from "axios";
+
+/* ---------------------- Types ---------------------- */
 
 interface Credentials {
   email: string;
   password: string;
+}
+
+interface RegisterData extends Credentials {
+  name: string;
 }
 
 interface AuthStore {
@@ -16,14 +23,26 @@ interface AuthStore {
 
   checkAuthStatus: () => Promise<void>;
   login: (data: Credentials) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
 
-/* ---------- Strongly typed Set/Get ---------- */
-
 type StoreSet = Parameters<StateCreator<AuthStore>>[0];
-// type StoreGet = Parameters<StateCreator<AuthStore>>[1];
+
+/* ----------------- Error Extraction ---------------- */
+
+const extractErrorMessage = (err: unknown): string => {
+  if (axios.isAxiosError(err) && (err as AxiosError).response) {
+    const data = err.response?.data as { message?: string | string[] };
+
+    if (Array.isArray(data.message)) return data.message.join(", ");
+    return data.message || "Something went wrong.";
+  }
+  return "Network error or unknown failure.";
+};
+
+/* ------------------- Functions -------------------- */
 
 const checkAuthStatusFn = async (set: StoreSet) => {
   set({ isCheckingAuth: true });
@@ -42,22 +61,37 @@ const loginFn = async (set: StoreSet, data: Credentials) => {
   try {
     const user = await authApi.login(data);
     set({ user, isLoading: false });
-  } catch {
-    set({
-      user: null,
-      error: "Invalid email or password",
-      isLoading: false,
-    });
-    throw new Error("Login failed");
+  } catch (err) {
+    const msg = extractErrorMessage(err);
+    set({ user: null, error: msg, isLoading: false });
+    throw err;
+  }
+};
+
+const registerFn = async (set: StoreSet, data: RegisterData) => {
+  set({ isLoading: true, error: null });
+
+  try {
+    const user = await authApi.register(data);
+    set({ user, isLoading: false });
+  } catch (err) {
+    const msg = extractErrorMessage(err);
+    set({ user: null, error: msg, isLoading: false });
+    throw err;
   }
 };
 
 const logoutFn = async (set: StoreSet) => {
-  await authApi.logout();
-  set({ user: null });
+  set({ isLoading: true });
+
+  try {
+    await authApi.logout();
+  } finally {
+    set({ user: null, isLoading: false });
+  }
 };
 
-/* ---------- Zustand Store ---------- */
+/* ------------------ Zustand Store ------------------ */
 
 export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
@@ -67,6 +101,21 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   checkAuthStatus: () => checkAuthStatusFn(set),
   login: (data) => loginFn(set, data),
+  register: (data) => registerFn(set, data),
   logout: () => logoutFn(set),
+
   clearError: () => set({ error: null }),
 }));
+
+/* ------- SAFE SELECTORS (NO INFINITE LOOPS) -------- */
+
+export const useAuthUser = () => useAuthStore((s) => s.user);
+export const useAuthLoading = () => useAuthStore((s) => s.isLoading);
+export const useAuthChecking = () => useAuthStore((s) => s.isCheckingAuth);
+export const useAuthError = () => useAuthStore((s) => s.error);
+
+export const useAuthLogin = () => useAuthStore((s) => s.login);
+export const useAuthRegister = () => useAuthStore((s) => s.register);
+export const useAuthLogout = () => useAuthStore((s) => s.logout);
+export const useAuthCheck = () => useAuthStore((s) => s.checkAuthStatus);
+export const useAuthClearError = () => useAuthStore((s) => s.clearError);
