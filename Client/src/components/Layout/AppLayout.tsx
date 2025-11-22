@@ -5,7 +5,6 @@ import { useAuthStore } from "../../auth/auth.store";
 import { useEffect } from "react";
 
 const AppLayout = () => {
-  // Select individually (prevents infinite loops)
   const checkAuthStatus = useAuthStore((state) => state.checkAuthStatus);
   const isCheckingAuth = useAuthStore((state) => state.isCheckingAuth);
 
@@ -24,8 +23,9 @@ const AppLayout = () => {
   }
 
   return (
-    <div className="flex gap-1 flex-col text-foreground lg:ml-36 md:ml-[60px] lg:mr-36 ml-5 md:mr-[60px] mr-5 mt-6 overflow-hidden">
+    <div className="flex flex-col h-screen text-foreground lg:ml-36 md:ml-[60px] lg:mr-36 ml-5 md:mr-[60px] mr-5 mt-6">
       <Navbar />
+
       <div className="flex flex-1 w-full">
         <SideBar />
         <main className="w-full md:w-[75%]">
