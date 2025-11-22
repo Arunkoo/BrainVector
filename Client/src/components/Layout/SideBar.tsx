@@ -54,8 +54,9 @@ const SideBar = () => {
         </div>
 
         <Button
-          variant="ghost"
-          className="w-full justify-start mt-2 text-black/80 hover:bg-white/50 hover:text-red-600"
+          variant="destructive"
+          className="w-full justify-start mt-2 text-black/80 
+           hover:bg-white/50 hover:text-red-600 cursor-pointer"
         >
           <LogOut size={20} className="mr-2" />
           Log Out
