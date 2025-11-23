@@ -65,7 +65,7 @@ const SideBar = () => {
           <h1 className="text-[15px] font-medium text-black truncate">
             {user?.name || user?.email}
           </h1>
-          <p className="text-xs text-black/60 truncate">
+          <p className="text-xs text-black/60 truncate ">
             Role: {user?.role || "User"}
           </p>
         </div>
