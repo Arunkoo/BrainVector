@@ -1,5 +1,6 @@
 import { cn } from "../lib/utils";
 import { Button } from "../components/ui/button";
+import { Spinner } from "./ui/spinner";
 import {
   Card,
   CardContent,
@@ -112,7 +113,14 @@ export function LoginForm({
                   disabled={isLoading}
                   className="bg-black text-white cursor-pointer hover:bg-black/95 hover:text-white/95"
                 >
-                  {isLoading ? "Authenticating..." : "Login"}
+                  {isLoading ? (
+                    <>
+                      <Spinner />
+                      Authenticating
+                    </>
+                  ) : (
+                    "Login"
+                  )}
                 </Button>
                 <FieldDescription className="text-center">
                   Don&apos;t have an account? <a href="/Register">Sign up</a>

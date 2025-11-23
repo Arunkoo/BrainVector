@@ -22,6 +22,7 @@ import {
 } from "../auth/auth.store";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { Spinner } from "./ui/spinner";
 
 export function SignupForm({
   className,
@@ -129,7 +130,14 @@ export function SignupForm({
                   disabled={isLoading}
                   className="bg-black text-white cursor-pointer hover:bg-black/95 hover:text-white/95"
                 >
-                  {isLoading ? "Registering..." : "Create Account"}
+                  {isLoading ? (
+                    <>
+                      <Spinner />
+                      Registering
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
                 </Button>
                 <FieldDescription className="text-center">
                   Already have an account? <a href="/Login">Login</a>
