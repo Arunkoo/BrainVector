@@ -16,7 +16,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { user, token } = await this.authservice.register(dto);
-    res.cookie('jwt', token, { httpOnly: true });
+    res.cookie('jwt', token, { httpOnly: true, sameSite: 'lax' });
     return user;
   }
 
@@ -26,7 +26,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { user, token } = await this.authservice.login(dto);
-    res.cookie('jwt', token, { httpOnly: true });
+    res.cookie('jwt', token, { httpOnly: true, sameSite: 'lax' });
     return user;
   }
 
