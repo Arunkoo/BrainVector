@@ -1,10 +1,19 @@
-import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
-import { type Response } from 'express';
+import { type Response, type Request } from 'express';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import type { User } from '@prisma/client';
+
+import { UserWithoutPassword } from 'src/types/userWithoutPasswordType';
 
 @Controller('auth')
 export class AuthController {
@@ -38,7 +47,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  getMe(user: User) {
-    return user;
+  getMe(@Req() req: Request & { user: UserWithoutPassword }) {
+    return req.user;
   }
 }
