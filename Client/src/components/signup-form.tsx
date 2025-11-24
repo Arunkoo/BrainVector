@@ -53,7 +53,7 @@ export function SignupForm({
 
     try {
       await register({ name, email, password });
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       console.log("Registration failed on frontend side.", err);
     }

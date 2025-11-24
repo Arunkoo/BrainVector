@@ -6,6 +6,7 @@ import LoginPage from "../pages/LoginPage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import DashBoard from "../pages/DashBoard";
 import SignupPage from "../pages/SignupPage";
+import RedirectIfLoggedIn from "../components/RedirectIfLoggedIn";
 
 const router = createBrowserRouter([
   {
@@ -14,17 +15,27 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
+        element: <HomePage />, // public
+      },
+
+      {
+        path: "login",
         element: (
-          <ProtectedRoute>
-            <HomePage />
-          </ProtectedRoute>
+          <RedirectIfLoggedIn>
+            <LoginPage />
+          </RedirectIfLoggedIn>
         ),
       },
+
       {
-        path: "Login",
-        element: <LoginPage />,
+        path: "register",
+        element: (
+          <RedirectIfLoggedIn>
+            <SignupPage />
+          </RedirectIfLoggedIn>
+        ),
       },
-      { path: "Register", element: <SignupPage /> },
+
       {
         path: "dashboard",
         element: (

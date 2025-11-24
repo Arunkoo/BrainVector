@@ -36,7 +36,12 @@ export function LoginForm({
   const navigate = useNavigate();
   const user = useAuthUser();
   const location = useLocation();
-  const fromPath = location.state?.from?.pathname || "/";
+  const fromPath =
+    location.state?.from?.pathname &&
+    location.state?.from?.pathname !== "/login"
+      ? location.state.from.pathname
+      : "/dashboard";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   if (user) {
