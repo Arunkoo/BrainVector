@@ -1,40 +1,80 @@
 import axios from "axios";
 
-type WorkspaceRole = "Owner" | "Admin" | "Editor" | "Viewer";
+/** Roles exactly as backend returns */
+export type WorkspaceRole = "Owner" | "Admin" | "Editor" | "Viewer";
 
-interface Workspace {
+/** Shape for user object embedded in member */
+export interface WorkspaceUser {
+  id: string;
+  name: string;
+  email: string;
+  role?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** Member record as returned by backend */
+export interface WorkspaceMember {
+  id: string;
+  role: WorkspaceRole;
+  userId: string;
+  WorkspaceId: string;
+  createdAt: string;
+  updatedAt: string;
+  user: WorkspaceUser;
+}
+
+/** Workspace as returned by backend */
+export interface Workspace {
   id: string;
   name: string;
   ownerId: string;
   createdAt: string;
-  currentUserRole: WorkspaceRole;
+  updatedAt: string;
+  members: WorkspaceMember[];
 }
 
-interface CreateWorkspaceDto {
+/** DTOs */
+export interface CreateWorkspaceDto {
   name: string;
 }
 
-//base stepUp for axios...
+/** axios instance */
 const api = axios.create({
   baseURL:
     import.meta.env.VITE_API_URL || "http://localhost:3000/api/workspace",
   withCredentials: true,
 });
 
+/** Raw API — does NOT compute currentUserRole (store will compute) */
 export const workspaceApi = {
-  //Get/workspace..
-  getUserWorkspace: async (): Promise<Workspace[]> => {
-    const response = await api.get<Workspace[]>("/");
-    return response.data;
+  getUserWorkspaces: async (): Promise<Workspace[]> => {
+    const res = await api.get<Workspace[]>("/");
+    return res.data;
   },
 
-  //post /workspace...
-  createWorkspace: async (data: CreateWorkspaceDto): Promise<Workspace> => {
-    const response = await api.post<Workspace>("/", data);
-    return response.data;
+  getWorkspaceById: async (id: string): Promise<Workspace> => {
+    const res = await api.get<Workspace>(`/${id}`);
+    return res.data;
   },
 
-  //post /workspace/:workspaceId/invite...
+  createWorkspace: async (dto: CreateWorkspaceDto): Promise<Workspace> => {
+    const res = await api.post<Workspace>("/", dto);
+    return res.data;
+  },
+
+  updateWorkspaceName: async (id: string, name: string): Promise<Workspace> => {
+    const res = await api.put<Workspace>(`/${id}`, { name });
+    return res.data;
+  },
+
+  deleteWorkspace: async (id: string): Promise<void> => {
+    await api.delete(`/${id}`);
+  },
+
+  leaveWorkspace: async (id: string): Promise<void> => {
+    await api.post(`/${id}/leave`);
+  },
 
   inviteUser: async (
     workspaceId: string,
