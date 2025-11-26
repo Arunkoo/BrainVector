@@ -10,18 +10,16 @@ import {
   useCreateWorkspace,
   useInviteUser,
 } from "../workspace/workspace.store";
+import type { WorkspaceRole } from "../api/workspace.api";
 
-const ROLE_COLORS: Record<string, string> = {
+const ROLE_COLORS: Record<WorkspaceRole, string> = {
   Owner: "bg-red-500",
   Admin: "bg-yellow-500",
   Editor: "bg-green-500",
   Viewer: "bg-blue-500",
 };
 
-const normalizeRole = (role?: string) =>
-  !role ? "Viewer" : role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
-
-const Dashboard = () => {
+const Dashboard: React.FC = () => {
   const user = useAuthUser();
   const userId = user?.id;
 
@@ -111,7 +109,7 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           {workspaces.map((ws) => {
-            const role = normalizeRole(ws.currentUserRole);
+            const role = ws.currentUserRole;
             const color = ROLE_COLORS[role] || "bg-gray-400";
 
             return (
