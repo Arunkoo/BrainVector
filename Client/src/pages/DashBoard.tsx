@@ -38,6 +38,10 @@ const Dashboard: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<WorkspaceRole | "all">("all");
   const [filterOpen, setFilterOpen] = useState(false);
 
+  // pagination state
+  const ITEMS_PER_PAGE = 6; // 2 rows * 3 columns on desktop
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
     if (userId && !initialLoadDone) {
       fetchWorkspaces();
@@ -65,6 +69,21 @@ const Dashboard: React.FC = () => {
     roleFilter === "all"
       ? workspaces
       : workspaces.filter((w) => w.currentUserRole === roleFilter);
+
+  // reset page when filter changes or list length changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [roleFilter, workspaces.length]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredWorkspaces.length / ITEMS_PER_PAGE)
+  );
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentItems = filteredWorkspaces.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100">
@@ -110,8 +129,7 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Stats row – all three boxes same size */}
-        {/* Stats row – compact content, same card size */}
+        {/* Stats row – compact */}
         <section className="grid grid-cols-3 gap-3 sm:gap-4">
           {/* Workspaces count */}
           <div className="rounded-xl border border-slate-200/50 bg-white/80 backdrop-blur-sm px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px]">
@@ -123,7 +141,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Filter card with dropdown (unchanged alignment) */}
+          {/* Filter card with dropdown */}
           <div className="relative">
             <div
               className="rounded-xl border border-slate-200/50 bg-white/80 backdrop-blur-sm px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px] cursor-pointer hover:shadow-md transition-shadow"
@@ -188,7 +206,7 @@ const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        {/* Workspaces */}
+        {/* Workspaces with pagination */}
         <section className="space-y-4">
           {isLoading && !workspaces.length && (
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200/50 bg-white/70 backdrop-blur-sm px-8 py-12 text-center shadow-sm">
@@ -210,56 +228,105 @@ const Dashboard: React.FC = () => {
             </div>
           )}
 
-          {workspaces.length > 0 && filteredWorkspaces.length === 0 && (
+          {filteredWorkspaces.length > 0 && currentItems.length === 0 && (
             <div className="rounded-2xl border-2 border-dashed border-slate-200/50 bg-white/70 backdrop-blur-sm px-6 py-8 text-center text-sm text-slate-500 shadow-sm">
               No workspaces match this filter.
             </div>
           )}
 
-          {filteredWorkspaces.length > 0 && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredWorkspaces.map((ws) => {
-                const role = ws.currentUserRole;
-                const color = ROLE_COLORS[role] || "bg-slate-400";
+          {currentItems.length > 0 && (
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {currentItems.map((ws) => {
+                  const role = ws.currentUserRole;
+                  const color = ROLE_COLORS[role] || "bg-slate-400";
 
-                return (
-                  <div
-                    key={ws.id}
-                    className="group flex flex-col rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-sm hover:shadow-xl hover:shadow-slate-300/40 hover:-translate-y-1 transition-all duration-300 hover:border-slate-300/70"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <h3 className="truncate text-lg font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">
-                          {ws.name || "Untitled workspace"}
-                        </h3>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {new Date(ws.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
+                  return (
+                    <div
+                      key={ws.id}
+                      className="group flex flex-col rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-sm hover:shadow-xl hover:shadow-slate-300/40 hover:-translate-y-1 transition-all duration-300 hover:border-slate-300/70"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <h3 className="truncate text-lg font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                            {ws.name || "Untitled workspace"}
+                          </h3>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {new Date(ws.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
 
-                      <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${color}`}
-                      >
-                        {role}
-                      </span>
-                    </div>
-
-                    {(role === "Owner" || role === "Admin") && (
-                      <div className="mt-6 pt-4 border-t border-slate-100/50 flex items-center justify-between text-xs text-slate-500">
-                        <button
-                          onClick={() => handleInvite(ws.id)}
-                          className="font-semibold text-slate-700 hover:text-slate-900 transition-colors"
-                          aria-label={`Invite member to ${ws.name}`}
+                        <span
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${color}`}
                         >
-                          Invite
-                        </button>
-                        <span className="text-slate-400 text-xs">Members</span>
+                          {role}
+                        </span>
                       </div>
-                    )}
+
+                      {(role === "Owner" || role === "Admin") && (
+                        <div className="mt-6 pt-4 border-t border-slate-100/50 flex items-center justify-between text-xs text-slate-500">
+                          <button
+                            onClick={() => handleInvite(ws.id)}
+                            className="font-semibold text-slate-700 hover:text-slate-900 transition-colors"
+                            aria-label={`Invite member to ${ws.name}`}
+                          >
+                            Invite
+                          </button>
+                          <span className="text-slate-400 text-xs">
+                            Members
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between gap-3 pt-2">
+                  <div className="text-xs text-slate-500">
+                    Page {currentPage} of {totalPages}
                   </div>
-                );
-              })}
-            </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-2 py-1 text-xs rounded-md border border-slate-200 bg-white text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+                    >
+                      Prev
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-2.5 py-1 text-xs rounded-md border ${
+                            currentPage === page
+                              ? "border-slate-900 bg-slate-900 text-white"
+                              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                      className="px-2 py-1 text-xs rounded-md border border-slate-200 bg-white text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </section>
       </div>
