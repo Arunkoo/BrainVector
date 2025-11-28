@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
           <div className="relative">
             <button
               type="button"
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px] hover:bg-muted transition-colors"
+              className="w-full rounded-xl border backdrop-blur-sm  border-border bg-card px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px] hover:bg-muted transition-colors"
               onClick={() => setFilterOpen((open) => !open)}
             >
               <div className="space-y-0.5 text-left">
@@ -166,7 +166,7 @@ const Dashboard: React.FC = () => {
                 className="
                   absolute z-40 top-full left-0 mt-2 w-full
                   rounded-2xl border border-border
-                  bg-card shadow-xl shadow-black/40 
+                  bg-card shadow-xl shadow-black/40 backdrop-blur-sm 
                 "
               >
                 <div className="py-1.5">
