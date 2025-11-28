@@ -38,8 +38,7 @@ const Dashboard: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<WorkspaceRole | "all">("all");
   const [filterOpen, setFilterOpen] = useState(false);
 
-  // pagination state
-  const ITEMS_PER_PAGE = 6; // 2 rows * 3 columns on desktop
+  const ITEMS_PER_PAGE = 6;
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -70,7 +69,6 @@ const Dashboard: React.FC = () => {
       ? workspaces
       : workspaces.filter((w) => w.currentUserRole === roleFilter);
 
-  // reset page when filter changes or list length changes
   useEffect(() => {
     setCurrentPage(1);
   }, [roleFilter, workspaces.length]);
@@ -86,36 +84,39 @@ const Dashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-        {/* Top bar */}
-        <header className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-full bg-background text-foreground">
+      <div className="mx-auto max-w-6xl space-y-6">
+        {/* Header */}
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900">
-              Dashboard
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <h1 className="text-2xl sm:text-3xl font-semibold">Dashboard</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               Welcome, {user?.name || user?.email}
             </p>
           </div>
 
-          {/* Pill-style create workspace form */}
+          {/* Create workspace pill */}
           <form
             onSubmit={handleCreate}
-            className="flex w-full max-w-md items-stretch rounded-full border border-slate-200 bg-white shadow-sm overflow-hidden"
+            className="flex w-full max-w-md items-stretch rounded-full border border-border bg-card shadow-sm overflow-hidden"
           >
             <input
               value={newWorkspaceName}
               onChange={(e) => setNewWorkspaceName(e.target.value)}
               placeholder="Workspace name"
-              className="flex-1 bg-transparent px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+              className="flex-1 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
               disabled={isLoading}
               aria-label="Workspace name"
             />
             <button
               type="submit"
               disabled={isLoading || !newWorkspaceName.trim()}
-              className="mx-1 my-1 flex items-center justify-center rounded-full bg-slate-900 px-4 text-xs sm:text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              className="
+                mx-1 my-1 flex items-center justify-center rounded-full px-4 text-xs sm:text-sm font-medium
+                bg-slate-900 text-white hover:bg-slate-800
+                disabled:cursor-not-allowed disabled:opacity-60
+                dark:hover:bg-white/95 
+              "
               aria-label="Create new workspace"
             >
               Create
@@ -124,112 +125,117 @@ const Dashboard: React.FC = () => {
         </header>
 
         {error && (
-          <div className="rounded-xl border border-rose-100/50 bg-rose-50/80 backdrop-blur-sm px-5 py-4 text-sm text-rose-800 shadow-sm">
+          <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
             {error}
           </div>
         )}
 
-        {/* Stats row – compact */}
+        {/* Stats row */}
         <section className="grid grid-cols-3 gap-3 sm:gap-4">
-          {/* Workspaces count */}
-          <div className="rounded-xl border border-slate-200/50 bg-white/80 backdrop-blur-sm px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px]">
+          <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px]">
             <div className="space-y-0.5">
-              <p className="text-xs text-slate-500">Workspaces</p>
-              <p className="text-base sm:text-lg font-semibold text-slate-900">
+              <p className="text-xs text-muted-foreground">Workspaces</p>
+              <p className="text-base sm:text-lg font-semibold">
                 {workspaces.length}
               </p>
             </div>
           </div>
 
-          {/* Filter card with dropdown */}
+          {/* Filter */}
           <div className="relative">
-            <div
-              className="rounded-xl border border-slate-200/50 bg-white/80 backdrop-blur-sm px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px] cursor-pointer hover:shadow-md transition-shadow"
+            <button
+              type="button"
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px] hover:bg-muted transition-colors"
               onClick={() => setFilterOpen((open) => !open)}
             >
-              <div className="space-y-0.5">
-                <p className="text-xs text-slate-500">Filter</p>
-                <p className="text-sm font-medium text-slate-900 capitalize">
+              <div className="space-y-0.5 text-left">
+                <p className="text-xs text-muted-foreground">Filter</p>
+                <p className="text-sm font-medium capitalize text-foreground">
                   {roleFilter === "all" ? "All" : roleFilter}
                 </p>
               </div>
               <ChevronDown
-                className={`h-4 w-4 text-slate-600 transition-transform ${
+                className={`h-4 w-4 text-muted-foreground transition-transform ${
                   filterOpen ? "rotate-180" : ""
                 }`}
               />
-            </div>
+            </button>
 
             {filterOpen && (
-              <div className="absolute z-20 top-full left-0 mt-2 w-full rounded-xl border border-slate-200/50 bg-white/90 backdrop-blur-sm p-1.5 shadow-lg shadow-slate-200/50 max-h-60 overflow-auto">
-                <button
-                  onClick={() => {
-                    setRoleFilter("all");
-                    setFilterOpen(false);
-                  }}
-                  className={`block w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
-                    roleFilter === "all"
-                      ? "bg-indigo-100 text-indigo-700"
-                      : "text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
-                  All roles
-                </button>
-                {ROLE_LABELS.map((role) => (
+              <div
+                className="
+                  absolute z-40 top-full left-0 mt-2 w-full
+                  rounded-2xl border border-border
+                  bg-card shadow-xl shadow-black/40 
+                "
+              >
+                <div className="py-1.5">
                   <button
-                    key={role}
                     onClick={() => {
-                      setRoleFilter(role);
+                      setRoleFilter("all");
                       setFilterOpen(false);
                     }}
-                    className={`block w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium capitalize transition-colors ${
-                      roleFilter === role
-                        ? "bg-indigo-100 text-indigo-700"
-                        : "text-slate-700 hover:bg-slate-100"
+                    className={`block w-full px-3 py-2.5 text-left text-sm font-medium ${
+                      roleFilter === "all"
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground hover:bg-muted"
                     }`}
                   >
-                    {role}
+                    All roles
                   </button>
-                ))}
+                  {ROLE_LABELS.map((role) => (
+                    <button
+                      key={role}
+                      onClick={() => {
+                        setRoleFilter(role);
+                        setFilterOpen(false);
+                      }}
+                      className={`block w-full px-3 py-2.5 text-left text-sm font-medium capitalize ${
+                        roleFilter === role
+                          ? "bg-primary/10 text-primary"
+                          : "text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
-          {/* Status */}
-          <div className="rounded-xl border border-slate-200/50 bg-white/80 backdrop-blur-sm px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px]">
+          <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px]">
             <div className="space-y-0.5">
-              <p className="text-xs text-slate-500">Status</p>
-              <p className="text-sm font-medium text-slate-900">
+              <p className="text-xs text-muted-foreground">Status</p>
+              <p className="text-sm font-medium">
                 {isLoading ? "Syncing" : "Ready"}
               </p>
             </div>
           </div>
         </section>
 
-        {/* Workspaces with pagination */}
+        {/* Workspaces + pagination (same logic, only design tokens) */}
         <section className="space-y-4">
           {isLoading && !workspaces.length && (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200/50 bg-white/70 backdrop-blur-sm px-8 py-12 text-center shadow-sm">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-500" />
-              <p className="text-sm font-medium text-slate-700">
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-card px-8 py-12 text-center shadow-sm">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
+              <p className="text-sm font-medium text-muted-foreground">
                 Loading workspaces…
               </p>
             </div>
           )}
 
           {!isLoading && workspaces.length === 0 && (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200/50 bg-white/70 backdrop-blur-sm px-8 py-12 text-center shadow-sm">
-              <p className="text-lg font-semibold text-slate-700">
-                No workspaces yet
-              </p>
-              <p className="text-sm text-slate-500">
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-card px-8 py-12 text-center shadow-sm">
+              <p className="text-lg font-semibold">No workspaces yet</p>
+              <p className="text-sm text-muted-foreground">
                 Create your first workspace above.
               </p>
             </div>
           )}
 
           {filteredWorkspaces.length > 0 && currentItems.length === 0 && (
-            <div className="rounded-2xl border-2 border-dashed border-slate-200/50 bg-white/70 backdrop-blur-sm px-6 py-8 text-center text-sm text-slate-500 shadow-sm">
+            <div className="rounded-2xl border-2 border-dashed border-border bg-card px-6 py-8 text-center text-sm text-muted-foreground shadow-sm">
               No workspaces match this filter.
             </div>
           )}
@@ -239,19 +245,19 @@ const Dashboard: React.FC = () => {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {currentItems.map((ws) => {
                   const role = ws.currentUserRole;
-                  const color = ROLE_COLORS[role] || "bg-slate-400";
+                  const color = ROLE_COLORS[role] || "bg-slate-500";
 
                   return (
                     <div
                       key={ws.id}
-                      className="group flex flex-col rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-sm p-6 shadow-sm hover:shadow-xl hover:shadow-slate-300/40 hover:-translate-y-1 transition-all duration-300 hover:border-slate-300/70"
+                      className="group flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-200"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                          <h3 className="truncate text-lg font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                          <h3 className="truncate text-lg font-semibold group-hover:text-primary transition-colors">
                             {ws.name || "Untitled workspace"}
                           </h3>
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs text-muted-foreground">
                             {new Date(ws.createdAt).toLocaleDateString()}
                           </p>
                         </div>
@@ -264,17 +270,15 @@ const Dashboard: React.FC = () => {
                       </div>
 
                       {(role === "Owner" || role === "Admin") && (
-                        <div className="mt-6 pt-4 border-t border-slate-100/50 flex items-center justify-between text-xs text-slate-500">
+                        <div className="mt-6 pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                           <button
                             onClick={() => handleInvite(ws.id)}
-                            className="font-semibold text-slate-700 hover:text-slate-900 transition-colors"
+                            className="font-semibold text-primary hover:text-primary/80 transition-colors"
                             aria-label={`Invite member to ${ws.name}`}
                           >
                             Invite
                           </button>
-                          <span className="text-slate-400 text-xs">
-                            Members
-                          </span>
+                          <span className="text-[11px]">Members</span>
                         </div>
                       )}
                     </div>
@@ -282,10 +286,9 @@ const Dashboard: React.FC = () => {
                 })}
               </div>
 
-              {/* Pagination controls */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-between gap-3 pt-2">
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-muted-foreground">
                     Page {currentPage} of {totalPages}
                   </div>
                   <div className="flex items-center gap-1">
@@ -293,7 +296,7 @@ const Dashboard: React.FC = () => {
                       type="button"
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="px-2 py-1 text-xs rounded-md border border-slate-200 bg-white text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+                      className="px-2 py-1 text-xs rounded-md border border-border bg-card text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
                     >
                       Prev
                     </button>
@@ -305,8 +308,8 @@ const Dashboard: React.FC = () => {
                           onClick={() => setCurrentPage(page)}
                           className={`px-2.5 py-1 text-xs rounded-md border ${
                             currentPage === page
-                              ? "border-slate-900 bg-slate-900 text-white"
-                              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-card text-foreground hover:bg-muted"
                           }`}
                         >
                           {page}
@@ -319,7 +322,7 @@ const Dashboard: React.FC = () => {
                         setCurrentPage((p) => Math.min(totalPages, p + 1))
                       }
                       disabled={currentPage === totalPages}
-                      className="px-2 py-1 text-xs rounded-md border border-slate-200 bg-white text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+                      className="px-2 py-1 text-xs rounded-md border border-border bg-card text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
                     >
                       Next
                     </button>

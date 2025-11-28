@@ -1,27 +1,13 @@
 @import "tailwindcss";
-
-/* * NOTE on @custom-variant and tw-animate-css:
- * Tailwind CSS v4 focuses on a standard CSS workflow. 
- * If 'tw-animate-css' and '@custom-variant' are needed, 
- * you must ensure they are supported by your specific PostCSS setup.
- * For standard v4, you'd usually define the dark mode class in your config.
- * * Assuming 'tw-animate-css' is a necessary plugin/import:
- */
 @import "tw-animate-css";
 
-/* * V4 Recommendation: Define the dark variant directly in your tailwind.config.js 
- * if possible (e.g., darkMode: ['class', '.dark']). 
- * If you must define a custom variant here, the syntax is correct for PostCSS/Tailwind:
- */
 @custom-variant dark {
   :is(.dark &) ;
 }
 
 @layer base {
-  /* Global reset for border color. */
   * {
     border-color: hsl(var(--border));
-    /* Improved focus state for accessibility */
     &:focus-visible {
       outline-color: hsl(var(--ring));
       outline: 2px solid;
@@ -29,55 +15,54 @@
     }
   }
 
-  /* Correct placement of body selector, sibling to * */
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
 
-  /* ---------------------- ☀️ Light Theme (:root) ---------------------- */
+  /* LIGHT – soft neutral SaaS */
   :root {
-    /* Base Colors */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --background: 220 23% 98%;
+    --foreground: 222 47% 10%;
 
-    /* Primary / Secondary / Functional */
-    --primary: 221.2 83.2% 53.3%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 10%;
+
+    --primary: 221 78% 55%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
+
+    --secondary: 210 40% 97%;
+    --secondary-foreground: 222 40% 20%;
+
+    --muted: 210 25% 96%;
+    --muted-foreground: 215 15% 45%;
+
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 12%;
+
+    --destructive: 352 84% 62%;
     --destructive-foreground: 210 40% 98%;
 
-    /* Borders & Interaction */
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --border: 210 24% 90%;
+    --input: 210 24% 90%;
+    --ring: 221 78% 55%;
 
-    /* Radius */
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) + 4px);
+    --radius-xl: calc(var(--radius) + 6px);
 
-    /* Chart Colors */
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 222 84% 56%;
+    --chart-2: 160 72% 45%;
+    --chart-3: 28 85% 57%;
+    --chart-4: 280 70% 60%;
+    --chart-5: 340 82% 62%;
 
-    /* Sidebar Variables (Simplified to reference existing colors) */
-    --sidebar: var(--background);
+    --sidebar: var(--card);
     --sidebar-foreground: var(--foreground);
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: var(--primary-foreground);
@@ -87,40 +72,40 @@
     --sidebar-ring: var(--ring);
   }
 
-  /* ---------------------- 🌙 Dark Theme (.dark) ---------------------- */
+  /* DARK – warm navy, softened whites */
   .dark {
-    /* Base Colors */
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --background: 222 28% 10%;
+    --foreground: 210 25% 92%;
 
-    /* Primary / Secondary / Functional */
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --card: 222 24% 14%;
+    --card-foreground: 210 25% 92%;
 
-    /* Borders & Interaction */
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --popover: 222 24% 14%;
+    --popover-foreground: 210 25% 92%;
 
-    /* Chart Colors */
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --primary: 222 70% 60%;
+    --primary-foreground: 222 40% 12%;
 
-    /* Sidebar variables will inherit from the dark base colors defined here. */
+    --secondary: 222 22% 18%;
+    --secondary-foreground: 210 25% 92%;
+
+    --muted: 222 20% 20%;
+    --muted-foreground: 215 18% 70%;
+
+    --accent: 222 22% 22%;
+    --accent-foreground: 210 25% 92%;
+
+    --destructive: 352 70% 52%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 222 18% 26%;
+    --input: 222 18% 26%;
+    --ring: 222 70% 60%;
+
+    --chart-1: 222 70% 60%;
+    --chart-2: 160 65% 50%;
+    --chart-3: 30 80% 58%;
+    --chart-4: 280 70% 62%;
+    --chart-5: 340 75% 60%;
   }
 }
