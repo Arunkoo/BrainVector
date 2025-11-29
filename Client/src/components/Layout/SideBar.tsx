@@ -1,7 +1,7 @@
 import type { FC, ComponentType, SVGProps } from "react";
 import { Button } from "../ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
-import { Star, FileText, BarChart2, LogOut } from "lucide-react";
+import { Star, FileText, LogOut } from "lucide-react";
 import {
   useAuthLoading,
   useAuthLogout,
@@ -90,7 +90,7 @@ const SideBar: FC = () => {
         className="
           w-full justify-start mt-1 h-9 rounded-full text-[13px]
           text-slate-700 hover:bg-red-50 hover:text-red-600
-           dark:hover:bg-[#e5e7eb]
+          dark:hover:bg-[#e5e7eb]
         "
       >
         <LogOut size={16} className="mr-2" />
@@ -114,10 +114,10 @@ const SideBar: FC = () => {
 
   return (
     <aside className="hidden md:flex w-56 lg:w-64 shrink-0">
-      <div className="w-full rounded-3xl bg-card border border-border shadow-sm flex flex-col py-4">
+      <div className="w-full rounded-3xl bg-card border border-border shadow-sm flex flex-col py-4 min-h-[500px]">
         {user ? (
           <>
-            <div className="px-4 pb-1">
+            <div className="px-4 pb-1 flex-1">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                 Navigation
               </p>
@@ -134,26 +134,7 @@ const SideBar: FC = () => {
               </nav>
             </div>
 
-            <div className="px-4 pt-4">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                Analytics
-              </p>
-              <div className="rounded-2xl border border-border bg-muted/70 px-3 py-2 flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
-                  <BarChart2 className="h-4 w-4" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[12px] font-medium text-foreground">
-                    Workspace insights
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    Filter by role on the right.
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-auto px-3 pt-3 pb-3 border-t border-border">
+            <div className="mt-auto px-3 pt-3 pb-3 border-t border-border shrink-0">
               {AuthenticatedFooter}
             </div>
           </>
@@ -170,7 +151,7 @@ const SideBar: FC = () => {
                 Access your workspaces and documents after signing in.
               </p>
             </div>
-            <div className="px-3 pt-2 pb-3 border-t border-border">
+            <div className="px-3 pt-2 pb-3 border-t border-border shrink-0">
               {PublicFooter}
             </div>
           </>

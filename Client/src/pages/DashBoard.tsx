@@ -166,10 +166,14 @@ const Dashboard: React.FC = () => {
                 className="
                   absolute z-40 top-full left-0 mt-2 w-full
                   rounded-2xl border border-border
+<<<<<<< HEAD
                   bg-card shadow-xl shadow-black/40 backdrop-blur-sm 
+=======
+                  bg-card backdrop-blur-2xl shadow-xl shadow-black/40 
+>>>>>>> client-feature
                 "
               >
-                <div className="py-1.5">
+                <div className="py-1.5 ">
                   <button
                     onClick={() => {
                       setRoleFilter("all");
@@ -190,7 +194,7 @@ const Dashboard: React.FC = () => {
                         setRoleFilter(role);
                         setFilterOpen(false);
                       }}
-                      className={`block w-full px-3 py-2.5 text-left text-sm font-medium capitalize ${
+                      className={`block w-full px-3 py-2.5 text-left text-sm font-medium capitalize cursor-pointer hover:bg-blend-color-burn${
                         roleFilter === role
                           ? "bg-primary/10 text-primary"
                           : "text-foreground hover:bg-muted"
