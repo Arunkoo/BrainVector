@@ -28,10 +28,10 @@ const AppLayout = () => {
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-3 sm:mx-4 lg:mx-20 xl:mx-28 py-3 lg:py-5 flex flex-col gap-3 sm:gap-4">
         <Navbar />
-        <div className="flex gap-3 sm:gap-4 items-stretch">
+        <div className="flex gap-3 sm:gap-4 items-stretch min-h-[500px]">
           <SideBar />
           <main className="flex-1 min-w-0">
-            <div className="rounded-3xl bg-card border border-border shadow-sm">
+            <div className="rounded-3xl bg-card border border-border shadow-sm min-h-[500px]">
               <div className="px-3 sm:px-5 lg:px-8 py-4 sm:py-6">
                 <Outlet />
               </div>
