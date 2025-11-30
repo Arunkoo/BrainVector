@@ -31,7 +31,7 @@ const SidebarLink: FC<SidebarLinkProps> = ({
     to={to}
     className={`flex items-center gap-2 px-3 py-2 text-[14px] rounded-xl transition-colors ${
       active
-        ? "bg-primary text-primary-foreground shadow-sm"
+        ? "bg-primary text-primary-foreground shadow-sm dark:bg-white/90 dark:text-foreground"
         : "text-muted-foreground hover:bg-muted hover:text-foreground"
     }`}
   >
@@ -89,8 +89,8 @@ const SideBar: FC = () => {
         variant="ghost"
         className="
           w-full justify-start mt-1 h-9 rounded-full text-[13px]
-          text-slate-700 hover:bg-red-50 hover:text-red-600
-          dark:hover:bg-[#e5e7eb]
+          text-foreground hover:bg-destructive hover:text-destructive-foreground
+          dark:hover:bg-destructive/20
         "
       >
         <LogOut size={16} className="mr-2" />
@@ -105,7 +105,13 @@ const SideBar: FC = () => {
         Sign in to manage your workspaces.
       </p>
       <Link to="/Login">
-        <Button className="w-full h-9 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-sm hover:bg-primary/90 hover:shadow-md">
+        <Button
+          className="
+            w-full h-9 rounded-full text-sm font-medium shadow-sm border
+            bg-primary text-primary-foreground hover:bg-primary/90 border-border
+            dark:bg-white/90 dark:text-foreground dark:border-border dark:hover:bg-white
+          "
+        >
           Sign in / Sign up
         </Button>
       </Link>
@@ -114,7 +120,7 @@ const SideBar: FC = () => {
 
   return (
     <aside className="hidden md:flex w-56 lg:w-64 shrink-0">
-      <div className="w-full rounded-3xl bg-card border border-border shadow-sm flex flex-col py-4 min-h-[500px]">
+      <div className="w-full h-full rounded-3xl bg-card border border-border shadow-sm flex flex-col py-4">
         {user ? (
           <>
             <div className="px-4 pb-1 flex-1">
@@ -142,7 +148,7 @@ const SideBar: FC = () => {
           <>
             <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
               <div className="w-20 h-20 rounded-xl bg-muted border border-border flex items-center justify-center mb-4">
-                <div className="w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-md" />
+                <div className="w-9 h-9 bg-muted-foreground/20 rounded-md" />
               </div>
               <h2 className="text-sm font-semibold text-foreground mb-1">
                 Welcome back

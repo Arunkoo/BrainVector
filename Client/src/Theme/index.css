@@ -1,9 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark {
-  :is(.dark &) ;
-}
+/* Removed invalid @variant rule; use Tailwind's dark mode with the .dark selector instead */
 
 @layer base {
   * {

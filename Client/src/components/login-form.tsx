@@ -44,33 +44,29 @@ export function LoginForm({
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   if (user) {
-    // Redirects logged-in users to the 'from' path or the homepage
     return <Navigate to={fromPath} replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError(); // Clear previous errors
+    clearError();
 
     if (!email || !password) return;
 
     try {
-      // 2. Call the Zustand login action
       await login({ email, password });
-
-      // 3. Success! Navigate to the intended destination (or it will happen automatically
-      //    as the router sees the user state change and the component re-renders).
       navigate(fromPath, { replace: true });
     } catch (err) {
-      // Error message is already set in the Zustand store 'error' state
       console.error("Login failed on frontend side.", err);
     }
   };
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       {error && (
-        <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg">
+        <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/30 rounded-lg">
           {error}
         </div>
       )}
@@ -99,7 +95,7 @@ export function LoginForm({
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <a
                     href="#"
-                    className="ml-auto text-sm underline-offset-4 hover:underline"
+                    className="ml-auto text-sm underline-offset-4 hover:underline text-primary"
                   >
                     Forgot your password?
                   </a>
@@ -116,7 +112,11 @@ export function LoginForm({
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="bg-black text-white cursor-pointer hover:bg-black/95 hover:text-white/95"
+                  className="
+                    w-full 
+                    bg-primary text-primary-foreground hover:bg-primary/90
+                    dark:bg-white/90 dark:text-foreground dark:border dark:border-border dark:hover:bg-white
+                  "
                 >
                   {isLoading ? (
                     <>
@@ -128,7 +128,10 @@ export function LoginForm({
                   )}
                 </Button>
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="/Register">Sign up</a>
+                  Don't have an account?{" "}
+                  <a href="/Register" className="text-primary hover:underline">
+                    Sign up
+                  </a>
                 </FieldDescription>
               </Field>
             </FieldGroup>

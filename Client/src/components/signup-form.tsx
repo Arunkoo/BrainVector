@@ -28,7 +28,6 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  //Accesing states...
   const register = useAuthRegister();
   const isLoading = useAuthLoading();
   const error = useAuthError();
@@ -40,13 +39,10 @@ export function SignupForm({
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  //Guard against logged-in users accesing this page..
-
   if (user) {
     return <Navigate to="/" replace />;
   }
 
-  //handle submit...
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) return;
@@ -58,10 +54,11 @@ export function SignupForm({
       console.log("Registration failed on frontend side.", err);
     }
   };
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       {error && (
-        <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg">
+        <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/30 rounded-lg">
           {error}
         </div>
       )}
@@ -100,26 +97,16 @@ export function SignupForm({
                 />
               </Field>
               <Field>
-                <Field>
-                  <Field>
-                    <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      required
-                      placeholder="......"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </Field>
-                  {/* <Field>
-                    <FieldLabel htmlFor="confirm-password">
-                      Confirm Password
-                    </FieldLabel>
-                    <Input id="confirm-password" type="password" required />
-                  </Field> */}
-                </Field>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  placeholder="......"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
                 <FieldDescription>
                   Must be at least 6 characters long.
                 </FieldDescription>
@@ -128,7 +115,11 @@ export function SignupForm({
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="bg-black text-white cursor-pointer hover:bg-black/95 hover:text-white/95"
+                  className="
+                    w-full 
+                    bg-primary text-primary-foreground hover:bg-primary/90
+                    dark:bg-white/90 dark:text-foreground dark:border dark:border-border dark:hover:bg-white
+                  "
                 >
                   {isLoading ? (
                     <>
@@ -140,7 +131,10 @@ export function SignupForm({
                   )}
                 </Button>
                 <FieldDescription className="text-center">
-                  Already have an account? <a href="/Login">Login</a>
+                  Already have an account?{" "}
+                  <a href="/Login" className="text-primary hover:underline">
+                    Login
+                  </a>
                 </FieldDescription>
               </Field>
             </FieldGroup>

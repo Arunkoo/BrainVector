@@ -113,9 +113,9 @@ const Dashboard: React.FC = () => {
               disabled={isLoading || !newWorkspaceName.trim()}
               className="
                 mx-1 my-1 flex items-center justify-center rounded-full px-4 text-xs sm:text-sm font-medium
-                bg-slate-900 text-white hover:bg-slate-800
+                bg-primary text-primary-foreground hover:bg-primary/90
+                dark:bg-white/90 dark:text-foreground dark:border dark:border-border dark:hover:bg-white
                 disabled:cursor-not-allowed disabled:opacity-60
-                dark:hover:bg-white/95 
               "
               aria-label="Create new workspace"
             >
@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
           <div className="relative">
             <button
               type="button"
-              className="w-full rounded-xl border backdrop-blur-sm  border-border bg-card px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px] hover:bg-muted transition-colors"
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px] hover:bg-muted transition-colors"
               onClick={() => setFilterOpen((open) => !open)}
             >
               <div className="space-y-0.5 text-left">
@@ -165,12 +165,8 @@ const Dashboard: React.FC = () => {
               <div
                 className="
                   absolute z-40 top-full left-0 mt-2 w-full
-                  rounded-2xl border border-border
-<<<<<<< HEAD
-                  bg-card shadow-xl shadow-black/40 backdrop-blur-sm 
-=======
-                  bg-card backdrop-blur-2xl shadow-xl shadow-black/40 
->>>>>>> client-feature
+                  rounded-2xl border border-border bg-card/95 backdrop-blur-xl
+                  shadow-xl shadow-black/20 dark:shadow-black/40
                 "
               >
                 <div className="py-1.5 ">
@@ -194,7 +190,7 @@ const Dashboard: React.FC = () => {
                         setRoleFilter(role);
                         setFilterOpen(false);
                       }}
-                      className={`block w-full px-3 py-2.5 text-left text-sm font-medium capitalize cursor-pointer hover:bg-blend-color-burn${
+                      className={`block w-full px-3 py-2.5 text-left text-sm font-medium capitalize ${
                         roleFilter === role
                           ? "bg-primary/10 text-primary"
                           : "text-foreground hover:bg-muted"
@@ -218,7 +214,7 @@ const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        {/* Workspaces + pagination (same logic, only design tokens) */}
+        {/* Workspaces + pagination */}
         <section className="space-y-4">
           {isLoading && !workspaces.length && (
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-card px-8 py-12 text-center shadow-sm">
@@ -312,7 +308,7 @@ const Dashboard: React.FC = () => {
                           onClick={() => setCurrentPage(page)}
                           className={`px-2.5 py-1 text-xs rounded-md border ${
                             currentPage === page
-                              ? "border-primary bg-primary text-primary-foreground"
+                              ? "border-primary bg-primary text-primary-foreground dark:bg-white/90 dark:text-foreground"
                               : "border-border bg-card text-foreground hover:bg-muted"
                           }`}
                         >
