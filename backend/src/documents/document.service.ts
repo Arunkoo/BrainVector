@@ -32,6 +32,12 @@ export class DocumentService {
     }
     return membership;
   }
+  private readonly safeUserSelect = {
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+  };
 
   //create document under specified workspace..
   async createDocument(
@@ -48,7 +54,11 @@ export class DocumentService {
         workspace: { connect: { id: workspaceId } },
         createdBy: { connect: { id: userId } },
       },
-      include: { createdBy: true },
+      include: {
+        createdBy: {
+          select: this.safeUserSelect,
+        },
+      },
     });
   }
 
@@ -61,7 +71,7 @@ export class DocumentService {
         id: documentId,
         workspaceId: workspaceId,
       },
-      include: { createdBy: true },
+      include: { createdBy: { select: this.safeUserSelect } },
     });
 
     if (!document) {
@@ -81,7 +91,7 @@ export class DocumentService {
       orderBy: {
         updatedAt: 'desc',
       },
-      include: { createdBy: true },
+      include: { createdBy: { select: this.safeUserSelect } },
     });
   }
 

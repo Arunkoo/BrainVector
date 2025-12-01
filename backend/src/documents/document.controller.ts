@@ -48,6 +48,15 @@ export class DocumentController {
     );
   }
 
+  //find all....
+  @Get()
+  findAllDocs(
+    @Req() req: CustomRequest,
+    @Param('workspaceId') workspaceId: string,
+  ) {
+    return this.documentService.findAll(req.user.userId, workspaceId);
+  }
+
   @Patch(':documentId')
   updateDocs(
     @Req() req: CustomRequest,
