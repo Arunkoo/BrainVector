@@ -48,7 +48,6 @@ export class DocumentController {
     );
   }
 
-  //find all documents....
   @Patch(':documentId')
   updateDocs(
     @Req() req: CustomRequest,
