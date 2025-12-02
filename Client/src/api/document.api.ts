@@ -40,7 +40,10 @@ export const documentApi = {
   },
 
   //find all docs...
-  //   fetchALL: async () => {},
+  fetchALL: async (workspaceId: string): Promise<DocumentType[]> => {
+    const res = await api.get(`/workspace/${workspaceId}/document`);
+    return res.data;
+  },
 
   //update doc...
   updateDoc: async (
