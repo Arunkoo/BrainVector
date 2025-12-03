@@ -1,3 +1,4 @@
+// src/api/document.api.ts
 import axios from "axios";
 
 const api = axios.create({
@@ -5,21 +6,23 @@ const api = axios.create({
   withCredentials: true,
 });
 
-interface CreateDocumentDto {
+export interface CreateDocumentDto {
   userId: string;
   role: string;
 }
-interface DocumentType {
+
+export interface DocumentType {
+  id: string; // include id so store can map/compare
   title: string;
   content: string;
 }
-interface update_doc_Dto {
-  tile?: string;
+
+export interface UpdateDocDto {
+  title?: string; // fixed typo from tile -> title
   content?: string;
 }
 
 export const documentApi = {
-  //create...
   createDoc: async (
     workspaceId: string,
     payload: CreateDocumentDto
@@ -28,45 +31,40 @@ export const documentApi = {
     return res.data;
   },
 
-  //get one document...
   getOneDoc: async (
     workspaceId: string,
     documentId: string
   ): Promise<DocumentType> => {
     const res = await api.get(
-      `workspace/${workspaceId}/document/${documentId}`
+      `/workspace/${workspaceId}/document/${documentId}` // added leading /
     );
     return res.data;
   },
 
-  //find all docs...
   fetchALL: async (workspaceId: string): Promise<DocumentType[]> => {
     const res = await api.get(`/workspace/${workspaceId}/document`);
     return res.data;
   },
 
-  //update doc...
   updateDoc: async (
-    payload: update_doc_Dto,
     workspaceId: string,
-    documentId: string
+    documentId: string,
+    payload: UpdateDocDto
   ): Promise<DocumentType> => {
     const res = await api.patch(
-      `workspace/${workspaceId}/document/${documentId}`,
+      `/workspace/${workspaceId}/document/${documentId}`,
       payload
     );
     return res.data;
   },
 
-  //delete doc...
   deleteDoc: async (
     workspaceId: string,
     documentId: string
   ): Promise<{ message: string }> => {
     const res = await api.delete(
-      `workspace/${workspaceId}/document/${documentId}`
+      `/workspace/${workspaceId}/document/${documentId}`
     );
-
     return res.data;
   },
 };
