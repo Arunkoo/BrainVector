@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { useAuthUser } from "../auth/auth.store";
+import { useAuthUser } from "../store/auth.store";
 
 import {
   useWorkspaces,
@@ -9,7 +9,7 @@ import {
   useFetchWorkspaces,
   useCreateWorkspace,
   useInviteUser,
-} from "../workspace/workspace.store";
+} from "../store/workspace.store";
 import type { WorkspaceRole } from "../api/workspace.api";
 
 const ROLE_COLORS: Record<WorkspaceRole, string> = {

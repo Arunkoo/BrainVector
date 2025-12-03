@@ -21,7 +21,7 @@ import {
   useAuthLoading,
   useAuthLogin,
   useAuthUser,
-} from "../auth/auth.store";
+} from "../store/auth.store";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 

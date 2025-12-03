@@ -6,7 +6,7 @@ import {
   useAuthLoading,
   useAuthLogout,
   useAuthUser,
-} from "../../auth/auth.store";
+} from "../../store/auth.store";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const sidebarLinks = [

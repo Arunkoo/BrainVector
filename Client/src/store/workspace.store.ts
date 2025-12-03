@@ -8,7 +8,7 @@ import {
   workspaceApi,
 } from "../api/workspace.api";
 
-import { useAuthStore } from "../auth/auth.store";
+import { useAuthStore } from "./auth.store";
 
 export interface WorkspaceWithRole extends Workspace {
   currentUserRole: WorkspaceRole;

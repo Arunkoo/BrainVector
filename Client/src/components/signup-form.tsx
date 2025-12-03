@@ -19,7 +19,7 @@ import {
   useAuthLoading,
   useAuthRegister,
   useAuthUser,
-} from "../auth/auth.store";
+} from "../store/auth.store";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Spinner } from "./ui/spinner";
