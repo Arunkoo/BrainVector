@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuthUser } from "../store/auth.store";
 
 import {
@@ -24,6 +25,7 @@ const ROLE_LABELS: WorkspaceRole[] = ["Owner", "Admin", "Editor", "Viewer"];
 const Dashboard: React.FC = () => {
   const user = useAuthUser();
   const userId = user?.id;
+  const navigate = useNavigate();
 
   const workspaces = useWorkspaces();
   const isLoading = useWorkspaceLoading();
@@ -250,29 +252,47 @@ const Dashboard: React.FC = () => {
                   return (
                     <div
                       key={ws.id}
-                      className="group flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-200"
+                      className="group flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:border-primary/40 hover:cursor-pointer transition-all duration-200"
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <h3 className="truncate text-lg font-semibold group-hover:text-primary transition-colors">
-                            {ws.name || "Untitled workspace"}
-                          </h3>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {new Date(ws.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
+                      <div
+                        className="flex flex-col h-full"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() =>
+                          navigate(`/workspace/${ws.id}/documents`)
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            navigate(`/workspace/${ws.id}/documents`);
+                          }
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <h3 className="truncate text-lg font-semibold group-hover:text-primary transition-colors">
+                              {ws.name || "Untitled workspace"}
+                            </h3>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {new Date(ws.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
 
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${color}`}
-                        >
-                          {role}
-                        </span>
+                          <span
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${color}`}
+                          >
+                            {role}
+                          </span>
+                        </div>
                       </div>
 
                       {(role === "Owner" || role === "Admin") && (
                         <div className="mt-6 pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                           <button
-                            onClick={() => handleInvite(ws.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleInvite(ws.id);
+                            }}
                             className="font-semibold text-primary hover:text-primary/80 transition-colors"
                             aria-label={`Invite member to ${ws.name}`}
                           >

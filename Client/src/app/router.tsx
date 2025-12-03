@@ -6,6 +6,8 @@ import LoginPage from "../pages/LoginPage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import DashBoard from "../pages/DashBoard";
 import SignupPage from "../pages/SignupPage";
+import DocumentsPage from "../pages/DocumentPage";
+import DocumentEditorPage from "../pages/DocumentEditorPage";
 import RedirectIfLoggedIn from "../components/RedirectIfLoggedIn";
 
 const router = createBrowserRouter([
@@ -41,6 +43,24 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <DashBoard />
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: "workspace/:workspaceId/documents",
+        element: (
+          <ProtectedRoute>
+            <DocumentsPage />
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: "workspace/:workspaceId/document/:documentId",
+        element: (
+          <ProtectedRoute>
+            <DocumentEditorPage />
           </ProtectedRoute>
         ),
       },

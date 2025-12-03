@@ -1,4 +1,3 @@
-// src/api/document.api.ts
 import axios from "axios";
 
 const api = axios.create({
@@ -7,18 +6,18 @@ const api = axios.create({
 });
 
 export interface CreateDocumentDto {
-  userId: string;
-  role: string;
+  title: string;
+  content: string;
 }
 
 export interface DocumentType {
-  id: string; // include id so store can map/compare
+  id: string;
   title: string;
   content: string;
 }
 
 export interface UpdateDocDto {
-  title?: string; // fixed typo from tile -> title
+  title?: string;
   content?: string;
 }
 
@@ -36,7 +35,7 @@ export const documentApi = {
     documentId: string
   ): Promise<DocumentType> => {
     const res = await api.get(
-      `/workspace/${workspaceId}/document/${documentId}` // added leading /
+      `/workspace/${workspaceId}/document/${documentId}`
     );
     return res.data;
   },
