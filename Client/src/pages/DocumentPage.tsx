@@ -3,13 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Plus, ChevronLeft, Trash2, Edit3, FileText } from "lucide-react";
 import { useDocumentStore } from "../store/document.store";
 import { useWorkspaces, useWorkspaceLoading } from "../store/workspace.store";
-// import { useAuthUser } from "../store/auth.store";
+import { useAuthUser } from "../store/auth.store";
 
 const DocumentsPage: React.FC = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const navigate = useNavigate();
 
-  //   const user = useAuthUser();
+  const user = useAuthUser();
   const workspaces = useWorkspaces();
   const isWorkspaceLoading = useWorkspaceLoading();
 
@@ -37,13 +37,13 @@ const DocumentsPage: React.FC = () => {
 
   const handleCreateDoc = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newDocTitle.trim() || !workspaceId) return;
+    if (!newDocTitle.trim() || !workspaceId || !user?.id) return;
 
-    // FIXED: Send title + content, NO userId/role
     await create(workspaceId, {
       title: newDocTitle.trim(),
       content: "Start writing your document...",
     });
+
     setNewDocTitle("");
   };
 
@@ -148,21 +148,17 @@ const DocumentsPage: React.FC = () => {
           {documents.map((doc) => (
             <div
               key={doc.id}
-              className="group flex flex-col p-6 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-200 h-full"
+              className="group flex flex-col p-6 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/40 hover:cursor-pointer transition-all duration-200 h-full"
+              onClick={() => handleOpenDoc(doc.id)}
+              role="button"
+              tabIndex={0}
             >
-              <div
-                className="cursor-pointer flex-1"
-                onClick={() => handleOpenDoc(doc.id)}
-                role="button"
-                tabIndex={0}
-              >
-                <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors mb-2">
-                  {doc.title}
-                </h3>
-                <p className="text-xs text-muted-foreground mb-auto line-clamp-2">
-                  {doc.content.substring(0, 100) || "No content yet..."}...
-                </p>
-              </div>
+              <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors mb-2">
+                {doc.title}
+              </h3>
+              <p className="text-xs text-muted-foreground mb-auto line-clamp-2">
+                {doc.content.substring(0, 100) || "No content yet..."}...
+              </p>
               <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">
                   Created recently
