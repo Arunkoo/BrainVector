@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
   Save,
-  Trash2,
   Bold,
   Italic,
   Underline,
@@ -14,6 +13,8 @@ import {
   Heading1,
   Heading2,
   Strikethrough,
+  Eye,
+  MoreVertical,
 } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -32,7 +33,6 @@ const DocumentEditorPage: React.FC = () => {
   }>();
   const navigate = useNavigate();
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const workspaces = useWorkspaces();
   const {
     current: document,
@@ -47,6 +47,7 @@ const DocumentEditorPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [wordCount, setWordCount] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
 
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const canEdit =
@@ -71,8 +72,7 @@ const DocumentEditorPage: React.FC = () => {
     content: "",
     editorProps: {
       attributes: {
-        class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none",
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[400px] p-4",
       },
     },
     onUpdate: ({ editor }) => {
@@ -96,7 +96,7 @@ const DocumentEditorPage: React.FC = () => {
             setIsAutoSaving(false);
           }
         }
-      }, 2000);
+      }, 1000);
     },
   });
 
@@ -152,52 +152,49 @@ const DocumentEditorPage: React.FC = () => {
     navigate(`/workspace/${workspaceId}/documents`);
   };
 
-  interface ToolbarButtonProps {
-    onClick: () => void;
-    active: boolean;
-    icon: React.ComponentType<{ className?: string }>;
-    title: string;
-  }
-
   const ToolbarButton = ({
     onClick,
     active,
     icon: Icon,
     title,
-  }: ToolbarButtonProps) => (
+  }: {
+    onClick: () => void;
+    active: boolean;
+    icon: React.ComponentType<{ className?: string }>;
+    title: string;
+  }) => (
     <button
       onClick={onClick}
-      className={`p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center group ${
-        active
-          ? "bg-linear-to-r from-primary to-accent text-primary-foreground shadow-lg scale-110"
-          : "hover:bg-secondary/50 hover:scale-110 active:scale-95"
+      className={`p-2 rounded hover:bg-muted transition-colors ${
+        active ? "bg-primary/10 text-primary" : "text-muted-foreground"
       }`}
       title={title}
       type="button"
     >
-      <Icon className={`h-4 w-4 ${active ? "" : "group-hover:text-primary"}`} />
+      <Icon className="h-4 w-4" />
     </button>
   );
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 text-muted-foreground animate-fade-in">
-        <div className="relative h-12 w-12">
-          <div className="absolute inset-0 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
-          <div className="absolute inset-0 animate-ping rounded-full bg-primary/20"></div>
+      <div className="flex flex-col items-center justify-center min-h-[400px] animate-fade-in">
+        <div className="relative h-8 w-8">
+          <div className="absolute inset-0 animate-spin rounded-full border-2 border-muted border-t-primary"></div>
         </div>
-        <p className="mt-4 text-sm font-semibold">Loading document...</p>
+        <p className="mt-4 text-sm text-muted-foreground">
+          Loading document...
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-2xl bg-destructive/10 backdrop-blur-sm p-8 text-sm text-destructive-foreground shadow-soft animate-slide-up">
+      <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive-foreground">
         {error}
         <button
           onClick={() => navigate(`/workspace/${workspaceId}/documents`)}
-          className="mt-4 px-6 py-3 bg-linear-to-r from-primary to-accent text-primary-foreground rounded-xl hover:shadow-lg font-semibold transition-all hover:scale-105 active:scale-95"
+          className="mt-3 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
         >
           Back to Documents
         </button>
@@ -207,11 +204,11 @@ const DocumentEditorPage: React.FC = () => {
 
   if (!document) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 text-muted-foreground text-center animate-fade-in">
-        <p className="text-xl font-bold mb-3">Document not found</p>
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center animate-fade-in">
+        <p className="text-lg font-semibold mb-2">Document not found</p>
         <button
           onClick={() => navigate(`/workspace/${workspaceId}/documents`)}
-          className="px-8 py-3 bg-linear-to-r from-primary to-accent text-primary-foreground rounded-xl hover:shadow-lg font-semibold transition-all hover:scale-105 active:scale-95"
+          className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
         >
           Back to Documents
         </button>
@@ -220,168 +217,191 @@ const DocumentEditorPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 h-full flex flex-col animate-fade-in">
+    <div className="space-y-4 h-full flex flex-col animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(`/workspace/${workspaceId}/documents`)}
-            className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 p-2 -ml-1 rounded-xl hover:bg-primary/5 transition-all hover:scale-105 active:scale-95"
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors p-1"
           >
-            <ChevronLeft className="h-5 w-5" />
-            Documents
+            <ChevronLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Back</span>
           </button>
-          <div>
-            <h1 className="text-2xl font-bold gradient-text">
-              {workspace?.name}
-            </h1>
-            <p className="text-xs text-muted-foreground mt-1">
-              {isAutoSaving ? (
-                <span className="text-primary animate-pulse">
-                  Auto-saving...
-                </span>
-              ) : (
-                <span className="text-emerald-500">All changes saved</span>
-              )}
-            </p>
+          <div className="flex-1 min-w-0">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Untitled document"
+              className="w-full text-xl sm:text-2xl font-semibold bg-transparent focus:outline-none placeholder:text-muted-foreground"
+              disabled={!canEdit}
+              maxLength={255}
+            />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+              <span>{workspace?.name}</span>
+              <span>•</span>
+              <span>
+                {isAutoSaving ? (
+                  <span className="text-primary">Saving...</span>
+                ) : (
+                  <span className="text-emerald-500">Saved</span>
+                )}
+              </span>
+            </div>
           </div>
         </div>
+
         <div className="flex items-center gap-2">
           {canEdit && (
             <>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-linear-to-r from-primary to-accent text-primary-foreground hover:shadow-lg hover:shadow-primary/25 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? "Saving..." : "Save"}
               </button>
-              <button
-                onClick={handleDelete}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-destructive text-destructive-foreground hover:shadow-lg hover:shadow-destructive/25 font-semibold text-sm transition-all hover:scale-105 active:scale-95"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                  title="More options"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+                {showMenu && (
+                  <div className="absolute right-0 mt-1 bg-card border rounded-lg shadow-lg z-10 min-w-[140px]">
+                    <button
+                      onClick={handleDelete}
+                      className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg"
+                    >
+                      Delete document
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
       </div>
 
-      {/* Editor */}
-      <div className="flex-1 flex flex-col bg-card/40 backdrop-blur-xl rounded-3xl shadow-soft overflow-hidden">
-        {/* Title */}
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Untitled document"
-          className="w-full px-8 py-6 text-3xl font-bold bg-transparent focus:outline-none focus:bg-secondary/10 transition-colors resize-none"
-          disabled={!canEdit}
-          maxLength={255}
-        />
-
+      {/* Editor Container */}
+      <div className="flex-1 flex flex-col border rounded-lg overflow-hidden">
         {/* Toolbar */}
         {canEdit && editor && (
-          <div className="px-6 py-3 bg-background/50 backdrop-blur-sm flex items-center gap-2 flex-wrap shadow-sm">
-            <div className="flex items-center gap-1">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleBold().run()}
-                active={editor.isActive("bold")}
-                icon={Bold}
-                title="Bold"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleItalic().run()}
-                active={editor.isActive("italic")}
-                icon={Italic}
-                title="Italic"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleUnderline().run()}
-                active={editor.isActive("underline")}
-                icon={Underline}
-                title="Underline"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleStrike().run()}
-                active={editor.isActive("strike")}
-                icon={Strikethrough}
-                title="Strikethrough"
-              />
-            </div>
+          <div className="border-b p-2 bg-muted/50">
+            <div className="flex items-center gap-1 flex-wrap">
+              <div className="flex items-center border-r pr-2 mr-2">
+                <ToolbarButton
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                  active={editor.isActive("bold")}
+                  icon={Bold}
+                  title="Bold"
+                />
+                <ToolbarButton
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                  active={editor.isActive("italic")}
+                  icon={Italic}
+                  title="Italic"
+                />
+                <ToolbarButton
+                  onClick={() => editor.chain().focus().toggleUnderline().run()}
+                  active={editor.isActive("underline")}
+                  icon={Underline}
+                  title="Underline"
+                />
+                <ToolbarButton
+                  onClick={() => editor.chain().focus().toggleStrike().run()}
+                  active={editor.isActive("strike")}
+                  icon={Strikethrough}
+                  title="Strikethrough"
+                />
+              </div>
 
-            <div className="w-px h-6 bg-border mx-1"></div>
+              <div className="flex items-center border-r pr-2 mr-2">
+                <ToolbarButton
+                  onClick={() =>
+                    editor.chain().focus().toggleBulletList().run()
+                  }
+                  active={editor.isActive("bulletList")}
+                  icon={List}
+                  title="Bullet list"
+                />
+                <ToolbarButton
+                  onClick={() =>
+                    editor.chain().focus().toggleOrderedList().run()
+                  }
+                  active={editor.isActive("orderedList")}
+                  icon={ListOrdered}
+                  title="Numbered list"
+                />
+              </div>
 
-            <div className="flex items-center gap-1">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleBulletList().run()}
-                active={editor.isActive("bulletList")}
-                icon={List}
-                title="Bullet list"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                active={editor.isActive("orderedList")}
-                icon={ListOrdered}
-                title="Numbered list"
-              />
-              <ToolbarButton
-                onClick={() =>
-                  editor.chain().focus().toggleHeading({ level: 1 }).run()
-                }
-                active={editor.isActive("heading", { level: 1 })}
-                icon={Heading1}
-                title="Heading 1"
-              />
-              <ToolbarButton
-                onClick={() =>
-                  editor.chain().focus().toggleHeading({ level: 2 }).run()
-                }
-                active={editor.isActive("heading", { level: 2 })}
-                icon={Heading2}
-                title="Heading 2"
-              />
-            </div>
+              <div className="flex items-center border-r pr-2 mr-2">
+                <ToolbarButton
+                  onClick={() =>
+                    editor.chain().focus().toggleHeading({ level: 1 }).run()
+                  }
+                  active={editor.isActive("heading", { level: 1 })}
+                  icon={Heading1}
+                  title="Heading 1"
+                />
+                <ToolbarButton
+                  onClick={() =>
+                    editor.chain().focus().toggleHeading({ level: 2 }).run()
+                  }
+                  active={editor.isActive("heading", { level: 2 })}
+                  icon={Heading2}
+                  title="Heading 2"
+                />
+              </div>
 
-            <div className="w-px h-6 bg-border mx-1"></div>
-
-            <div className="flex items-center gap-1">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                active={editor.isActive("blockquote")}
-                icon={Quote}
-                title="Blockquote"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-                active={editor.isActive("codeBlock")}
-                icon={Code}
-                title="Code block"
-              />
+              <div className="flex items-center">
+                <ToolbarButton
+                  onClick={() =>
+                    editor.chain().focus().toggleBlockquote().run()
+                  }
+                  active={editor.isActive("blockquote")}
+                  icon={Quote}
+                  title="Blockquote"
+                />
+                <ToolbarButton
+                  onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                  active={editor.isActive("codeBlock")}
+                  icon={Code}
+                  title="Code block"
+                />
+              </div>
             </div>
           </div>
         )}
 
         {/* Editor Content */}
-        <div className="flex-1 min-h-[600px] p-8 overflow-auto">
+        <div className="flex-1 p-4 overflow-auto">
           {editor && <EditorContent editor={editor} />}
         </div>
-      </div>
 
-      {/* Word count & Status */}
-      {(wordCount > 0 || isAutoSaving) && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground bg-card/30 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-soft">
-          <span className="font-semibold">{wordCount} words</span>
-          <span className="font-semibold">
+        {/* Status Bar */}
+        <div className="border-t px-4 py-2 flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <span>{wordCount} words</span>
+            {!canEdit && (
+              <span className="flex items-center gap-1">
+                <Eye className="h-3 w-3" />
+                View only
+              </span>
+            )}
+          </div>
+          <div>
             {isAutoSaving ? (
               <span className="text-primary">Auto-saving...</span>
             ) : (
               <span className="text-emerald-500">All changes saved</span>
             )}
-          </span>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

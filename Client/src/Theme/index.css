@@ -1,255 +1,318 @@
 @import "tailwindcss";
 
-/* Modern Color System - Light Mode */
+/* Modern Color System - Inspired by Spotify/Shadcn */
 :root {
-  --background: 240 10% 98%;
-  --foreground: 240 10% 10%;
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 10%;
-  --primary: 250 95% 65%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 240 5% 96%;
-  --secondary-foreground: 240 6% 15%;
-  --muted: 240 5% 96%;
-  --muted-foreground: 240 4% 46%;
-  --accent: 250 95% 65%;
+  --card-foreground: 222.2 84% 4.9%;
+
+  --primary: 262 83% 58%;
+  --primary-foreground: 0 0% 100%; /* White text on primary */
+
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+
+  --accent: 262 83% 58%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
+
+  --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 100%;
-  --border: 240 6% 90%;
-  --input: 240 6% 90%;
-  --ring: 250 95% 65%;
+
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 262 83% 58%;
+
+  --radius: 0.5rem;
 }
 
-/* Modern Color System - Dark Mode */
 .dark {
-  --background: 240 10% 6%;
-  --foreground: 240 5% 96%;
-  --card: 240 8% 10%;
-  --card-foreground: 240 5% 96%;
-  --primary: 250 95% 65%;
+  --background: 0 0% 3.9%; /* Darker black background */
+  --foreground: 0 0% 98%; /* Light text */
+
+  --card: 0 0% 7.8%;
+  --card-foreground: 0 0% 98%;
+
+  --primary: 262 83% 58%; /* Same purple */
   --primary-foreground: 0 0% 100%;
-  --secondary: 240 5% 14%;
-  --secondary-foreground: 240 5% 90%;
-  --muted: 240 5% 14%;
-  --muted-foreground: 240 5% 64%;
-  --accent: 250 95% 65%;
+
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+
+  --accent: 262 83% 58%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 62% 50%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 240 6% 16%;
-  --input: 240 6% 16%;
-  --ring: 250 95% 65%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 0 0% 14.9%;
+  --input: 0 0% 14.9%;
+  --ring: 262 83% 58%;
 }
 
-/* Base Styles */
+/* Apply border color to all elements */
 * {
   border-color: hsl(var(--border));
 }
 
 body {
-  background: hsl(var(--background));
+  background-color: hsl(var(--background));
   color: hsl(var(--foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
 
-/* Modern Glassmorphism Effects */
+/* Fix for buttons to use theme colors */
+button:not([class*="bg-"]):not([class*="text-"]) {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button:not([class*="bg-"]):not([class*="text-"]):hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
+
+button:not([class*="bg-"]):not([class*="text-"]):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Glass Effect */
 .glass {
   background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .dark .glass {
-  background: rgba(15, 15, 20, 0.7);
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Smooth Transitions */
-.smooth-transition {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-/* Custom Scrollbar */
+@keyframes slide-up {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: hsl(var(--background));
 }
 
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--muted));
-  border-radius: 10px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+  background: hsl(var(--muted-foreground));
 }
 
-/* TIPTAP Editor Modern Theme */
-.prose {
-  color: hsl(var(--foreground));
-  max-width: none;
+/* Tiptap Editor Styles */
+.ProseMirror {
+  min-height: 500px;
+  padding: 1rem;
+  outline: none;
 }
 
-.prose h1,
-.prose h2,
-.prose h3 {
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-  background: linear-gradient(
-    135deg,
-    hsl(var(--foreground)),
-    hsl(var(--primary))
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.ProseMirror > * + * {
+  margin-top: 0.75em;
 }
 
-.prose h1 {
-  font-size: 2.25rem;
-  line-height: 2.5rem;
+.ProseMirror ul,
+.ProseMirror ol {
+  padding: 0 1rem;
 }
 
-.prose h2 {
+.ProseMirror h1 {
   font-size: 1.875rem;
+  font-weight: bold;
   line-height: 2.25rem;
 }
 
-.prose h3 {
+.ProseMirror h2 {
   font-size: 1.5rem;
+  font-weight: bold;
   line-height: 2rem;
 }
 
-.prose p {
-  color: hsl(var(--foreground) / 0.9);
-  line-height: 1.7;
-  margin-bottom: 1.25rem;
+.ProseMirror h3 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  line-height: 1.75rem;
 }
 
-.prose strong {
-  font-weight: 600;
-  color: hsl(var(--foreground));
+.ProseMirror p {
+  line-height: 1.75;
 }
 
-.prose blockquote {
-  border-left: 4px solid hsl(var(--primary));
-  background: hsl(var(--primary) / 0.05);
-  padding-left: 1.5rem;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
-  margin: 1.5rem 0;
-  border-radius: 0 1rem 1rem 0;
-  font-style: italic;
-}
-
-.prose code {
-  background: hsl(var(--muted));
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.5rem;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas,
-    "Liberation Mono", Menlo, monospace;
+.ProseMirror code {
+  background-color: hsl(var(--muted));
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
   font-size: 0.875rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-.prose pre {
-  background: hsl(var(--muted));
-  border-radius: 1rem;
-  padding: 1.5rem;
-  margin: 1.5rem 0;
+.ProseMirror pre {
+  background-color: hsl(var(--muted));
+  padding: 1rem;
+  border-radius: 0.5rem;
   overflow-x: auto;
 }
 
-.prose pre code {
-  background: transparent;
-  padding: 0;
-  border: none;
+.ProseMirror blockquote {
+  border-left: 4px solid hsl(var(--border));
+  padding-left: 1rem;
+  font-style: italic;
+  color: hsl(var(--muted-foreground));
 }
 
-.prose ul,
-.prose ol {
-  padding-left: 2rem;
-  margin-bottom: 1.25rem;
-}
-
-.prose li {
-  color: hsl(var(--foreground) / 0.9);
-  margin-bottom: 0.25rem;
-}
-
-.prose table {
-  border-collapse: collapse;
-  border-radius: 1rem;
-  overflow: hidden;
-  background: hsl(var(--card));
-  margin: 1.5rem 0;
-}
-
-.prose th,
-.prose td {
-  padding: 1rem;
-  text-align: left;
-}
-
-.prose th {
-  background: hsl(var(--muted));
-  font-weight: 600;
-}
-
-.prose a {
+.ProseMirror a {
   color: hsl(var(--primary));
   text-decoration: underline;
-  text-decoration-color: hsl(var(--primary) / 0.3);
-  text-underline-offset: 0.125rem;
-  transition: all 0.2s;
+  text-underline-offset: 2px;
 }
 
-.prose a:hover {
+.ProseMirror a:hover {
   color: hsl(var(--primary) / 0.8);
-  text-decoration-color: hsl(var(--primary));
 }
 
-/* Editor Container */
-.editor-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.editor-content {
-  flex: 1;
-  min-height: 32rem;
-  padding: 2rem;
-  overflow: auto;
-  font-family: inherit;
-}
-
-/* Gradient Accents */
+/* Gradient Text */
 .gradient-text {
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(262, 83%, 65%));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.gradient-border {
-  position: relative;
-  background: hsl(var(--card));
-  border-radius: 1rem;
+/* Selection */
+::selection {
+  background-color: hsl(var(--primary) / 0.2);
 }
 
-.gradient-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+/* Utility classes */
+.text-primary {
+  color: hsl(var(--primary));
+}
+
+.bg-primary {
+  background-color: hsl(var(--primary));
+}
+
+.text-primary-foreground {
+  color: hsl(var(--primary-foreground));
+}
+
+.bg-primary-foreground {
+  background-color: hsl(var(--primary-foreground));
+}
+
+.text-secondary {
+  color: hsl(var(--secondary));
+}
+
+.bg-secondary {
+  background-color: hsl(var(--secondary));
+}
+
+.text-secondary-foreground {
+  color: hsl(var(--secondary-foreground));
+}
+
+.bg-secondary-foreground {
+  background-color: hsl(var(--secondary-foreground));
+}
+
+.text-muted {
+  color: hsl(var(--muted));
+}
+
+.bg-muted {
+  background-color: hsl(var(--muted));
+}
+
+.text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+}
+
+.bg-muted-foreground {
+  background-color: hsl(var(--muted-foreground));
+}
+
+.bg-background {
+  background-color: hsl(var(--background));
+}
+
+.text-foreground {
+  color: hsl(var(--foreground));
+}
+
+.bg-card {
+  background-color: hsl(var(--card));
+}
+
+.text-card-foreground {
+  color: hsl(var(--card-foreground));
+}
+
+.border-border {
+  border-color: hsl(var(--border));
 }

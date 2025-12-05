@@ -59,7 +59,7 @@ export function LoginForm({
       await login({ email, password });
       navigate(fromPath, { replace: true });
     } catch (err) {
-      console.error("Login failed on frontend side.", err);
+      console.error("Login failed", err);
     }
   };
 
@@ -69,48 +69,45 @@ export function LoginForm({
       {...props}
     >
       {error && (
-        <div className="p-4 text-sm text-destructive-foreground bg-destructive/10 backdrop-blur-sm rounded-2xl shadow-soft animate-slide-up">
+        <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 rounded-lg">
           {error}
         </div>
       )}
-      <Card className="shadow-xl bg-card/50 backdrop-blur-xl overflow-hidden relative">
-        {/* Decorative gradient */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-primary via-accent to-primary"></div>
-
-        <CardHeader className="text-center space-y-2 pt-8">
-          <CardTitle className="text-2xl font-bold gradient-text">
-            Welcome back
-          </CardTitle>
+      <Card className="border shadow-sm">
+        <CardHeader className="text-center space-y-2 pb-2">
+          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
           <CardDescription className="text-muted-foreground">
-            Login to your account
+            Enter your credentials to continue
           </CardDescription>
         </CardHeader>
-
-        <CardContent className="pb-8">
+        <CardContent>
           <form onSubmit={handleSubmit}>
-            <FieldGroup>
+            <FieldGroup className="space-y-4">
               <Field>
-                <FieldLabel htmlFor="email" className="font-semibold">
+                <FieldLabel htmlFor="email" className="text-sm font-medium">
                   Email
                 </FieldLabel>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="you@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 rounded-xl bg-background/50 backdrop-blur-sm shadow-sm focus:shadow-md transition-all"
+                  className="h-10"
                 />
               </Field>
               <Field>
                 <div className="flex items-center">
-                  <FieldLabel htmlFor="password" className="font-semibold">
+                  <FieldLabel
+                    htmlFor="password"
+                    className="text-sm font-medium"
+                  >
                     Password
                   </FieldLabel>
                   <a
                     href="#"
-                    className="ml-auto text-sm underline-offset-4 hover:underline text-primary font-medium transition-colors"
+                    className="ml-auto text-xs underline-offset-4 hover:underline text-primary"
                   >
                     Forgot password?
                   </a>
@@ -121,29 +118,29 @@ export function LoginForm({
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 rounded-xl bg-background/50 backdrop-blur-sm shadow-sm focus:shadow-md transition-all"
+                  className="h-10"
                 />
               </Field>
               <Field className="mt-2">
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-12"
+                  className="w-full h-10"
                 >
                   {isLoading ? (
                     <>
-                      <Spinner />
-                      Authenticating
+                      <Spinner className="mr-2" />
+                      Signing in...
                     </>
                   ) : (
-                    "Login"
+                    "Sign in"
                   )}
                 </Button>
-                <FieldDescription className="text-center mt-4">
+                <FieldDescription className="text-center mt-4 text-sm">
                   Don't have an account?{" "}
                   <a
                     href="/Register"
-                    className="text-primary hover:underline font-semibold transition-colors"
+                    className="text-primary hover:underline font-medium"
                   >
                     Sign up
                   </a>

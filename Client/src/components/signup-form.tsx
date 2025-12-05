@@ -32,7 +32,6 @@ export function SignupForm({
   const isLoading = useAuthLoading();
   const error = useAuthError();
   const user = useAuthUser();
-
   const navigate = useNavigate();
 
   const [name, setName] = useState<string>("");
@@ -40,7 +39,7 @@ export function SignupForm({
   const [password, setPassword] = useState<string>("");
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,7 +50,7 @@ export function SignupForm({
       await register({ name, email, password });
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      console.log("Registration failed on frontend side.", err);
+      console.log("Registration failed", err);
     }
   };
 
@@ -61,27 +60,22 @@ export function SignupForm({
       {...props}
     >
       {error && (
-        <div className="p-4 text-sm text-destructive-foreground bg-destructive/10 backdrop-blur-sm rounded-2xl shadow-soft animate-slide-up">
+        <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 rounded-lg">
           {error}
         </div>
       )}
-      <Card className="shadow-xl bg-card/50 backdrop-blur-xl overflow-hidden relative">
-        {/* Decorative gradient */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-primary via-accent to-primary"></div>
-
-        <CardHeader className="text-center space-y-2 pt-8">
-          <CardTitle className="text-2xl font-bold gradient-text">
-            Create your account
-          </CardTitle>
+      <Card className="border shadow-sm">
+        <CardHeader className="text-center space-y-2 pb-2">
+          <CardTitle className="text-2xl font-bold">Create account</CardTitle>
           <CardDescription className="text-muted-foreground">
-            Enter your details to get started
+            Get started with your free account
           </CardDescription>
         </CardHeader>
-        <CardContent className="pb-8">
+        <CardContent>
           <form onSubmit={handleSubmit}>
-            <FieldGroup>
+            <FieldGroup className="space-y-4">
               <Field>
-                <FieldLabel htmlFor="name" className="font-semibold">
+                <FieldLabel htmlFor="name" className="text-sm font-medium">
                   Full Name
                 </FieldLabel>
                 <Input
@@ -92,26 +86,26 @@ export function SignupForm({
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-12 rounded-xl bg-background/50 backdrop-blur-sm shadow-sm focus:shadow-md transition-all"
+                  className="h-10"
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="email" className="font-semibold">
+                <FieldLabel htmlFor="email" className="text-sm font-medium">
                   Email
                 </FieldLabel>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="you@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 rounded-xl bg-background/50 backdrop-blur-sm shadow-sm focus:shadow-md transition-all"
+                  className="h-10"
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="password" className="font-semibold">
+                <FieldLabel htmlFor="password" className="text-sm font-medium">
                   Password
                 </FieldLabel>
                 <Input
@@ -122,34 +116,34 @@ export function SignupForm({
                   placeholder="Create a strong password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 rounded-xl bg-background/50 backdrop-blur-sm shadow-sm focus:shadow-md transition-all"
+                  className="h-10"
                 />
-                <FieldDescription className="text-xs">
-                  Must be at least 6 characters long.
+                <FieldDescription className="text-xs mt-1">
+                  Must be at least 6 characters long
                 </FieldDescription>
               </Field>
               <Field className="mt-2">
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-12"
+                  className="w-full h-10"
                 >
                   {isLoading ? (
                     <>
-                      <Spinner />
-                      Registering
+                      <Spinner className="mr-2" />
+                      Creating account...
                     </>
                   ) : (
-                    "Create Account"
+                    "Create account"
                   )}
                 </Button>
-                <FieldDescription className="text-center mt-4">
+                <FieldDescription className="text-center mt-4 text-sm">
                   Already have an account?{" "}
                   <a
                     href="/Login"
-                    className="text-primary hover:underline font-semibold transition-colors"
+                    className="text-primary hover:underline font-medium"
                   >
-                    Login
+                    Sign in
                   </a>
                 </FieldDescription>
               </Field>

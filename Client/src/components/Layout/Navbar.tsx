@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { navLogo } from "../../assets/images";
-import { Moon, Sun, Bell } from "lucide-react";
+import { Moon, Sun, Bell, Search } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 
 const Navbar = () => {
@@ -27,62 +27,75 @@ const Navbar = () => {
   }, [isDark]);
 
   return (
-    <nav className="w-full h-16 md:h-20 bg-card/50 backdrop-blur-xl rounded-2xl shadow-soft flex items-center justify-between px-5 sm:px-6 lg:px-8 animate-slide-up relative overflow-hidden group">
-      {/* Subtle gradient overlay on hover */}
-      <div className="absolute inset-0 bg-linear-to-r from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-      <div className="flex items-center gap-3 relative z-10">
-        <div className="relative">
-          <img
-            src={navLogo.logo1}
-            alt="BrainVector Logo"
-            className="h-8 md:h-10 object-contain drop-shadow-lg"
-          />
+    <nav className="w-full h-14 sm:h-16 bg-card border rounded-lg sm:rounded-xl shadow-sm flex items-center justify-between px-4 sm:px-6 animate-slide-up">
+      {/* Logo and Search */}
+      <div className="flex items-center gap-4 flex-1">
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <img
+              src={navLogo.logo1}
+              alt="BrainVector Logo"
+              className="h-8 w-8 sm:h-9 sm:w-9 object-contain"
+            />
+          </div>
+          <h1 className="hidden sm:flex items-end gap-1 text-xl font-bold">
+            <span className="text-primary">Brain</span>
+            <span className="font-medium text-muted-foreground">Vector</span>
+          </h1>
         </div>
-        <h1 className="flex items-end gap-1 text-xl md:text-2xl font-bold text-foreground">
-          <span className="gradient-text">Brain</span>
-          <span className="italic font-light text-muted-foreground">
-            Vector
-          </span>
-        </h1>
+
+        {/* Search Bar */}
+        <div className="hidden md:flex flex-1 max-w-md ml-6">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="search"
+              placeholder="Search..."
+              className="w-full pl-10 pr-4 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3 sm:gap-4 relative z-10">
+      {/* Actions */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Search Button for Mobile */}
+        <button
+          className="md:hidden p-2 hover:bg-secondary rounded-lg transition-colors"
+          aria-label="Search"
+        >
+          <Search className="h-5 w-5" />
+        </button>
+
         {/* Theme Toggle */}
         <button
           type="button"
           onClick={() => setIsDark((v) => !v)}
-          className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/50 backdrop-blur-sm hover:bg-secondary transition-all duration-300 hover:scale-110 active:scale-95 group/theme shadow-sm"
-          aria-label="Toggle dark mode"
+          className="p-2 hover:bg-secondary rounded-lg transition-colors relative"
+          aria-label="Toggle theme"
         >
-          <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/20 to-accent/20 opacity-0 group-hover/theme:opacity-100 transition-opacity duration-300"></div>
           {isDark ? (
-            <Sun className="h-5 w-5 text-amber-400 relative z-10 transition-transform duration-300 group-hover/theme:rotate-12" />
+            <Sun className="h-5 w-5 text-amber-400" />
           ) : (
-            <Moon className="h-5 w-5 text-primary relative z-10 transition-transform duration-300 group-hover/theme:-rotate-12" />
+            <Moon className="h-5 w-5" />
           )}
         </button>
 
         {/* Notifications */}
         <button
-          className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/50 backdrop-blur-sm hover:bg-secondary transition-all duration-300 hover:scale-110 active:scale-95 shadow-sm group/bell"
+          className="p-2 hover:bg-secondary rounded-lg transition-colors relative"
           aria-label="Notifications"
         >
-          <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/20 to-accent/20 opacity-0 group-hover/bell:opacity-100 transition-opacity duration-300"></div>
-          <Bell className="h-5 w-5 text-muted-foreground group-hover/bell:text-foreground transition-all duration-300 relative z-10 group-hover/bell:animate-pulse" />
-          <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full animate-pulse"></span>
+          <Bell className="h-5 w-5" />
+          <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full"></span>
         </button>
 
         {/* User Avatar */}
-        <div className="relative group/avatar">
-          <div className="absolute -inset-1 bg-linear-to-r from-primary to-accent rounded-full opacity-0 group-hover/avatar:opacity-75 blur transition-all duration-300"></div>
-          <Avatar className="relative h-10 w-10 cursor-pointer ring-2 ring-background shadow-lg transition-all duration-300 group-hover/avatar:scale-110">
-            <AvatarImage
-              src="https://github.com/shadcn.png"
-              alt="User Avatar"
-            />
-            <AvatarFallback className="bg-linear-to-br from-primary to-accent text-primary-foreground font-semibold">
-              CN
+        <div className="ml-2">
+          <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-border">
+            <AvatarImage src="https://github.com/shadcn.png" alt="User" />
+            <AvatarFallback className="bg-primary text-primary-foreground">
+              BV
             </AvatarFallback>
           </Avatar>
         </div>

@@ -14,6 +14,7 @@ export interface DocumentType {
   id: string;
   title: string;
   content: string;
+  createdAt: string;
 }
 
 export interface UpdateDocDto {
