@@ -64,23 +64,35 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div
+      className={cn("flex flex-col gap-6 animate-fade-in", className)}
+      {...props}
+    >
       {error && (
-        <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/30 rounded-lg">
+        <div className="p-4 text-sm text-destructive-foreground bg-destructive/10 backdrop-blur-sm rounded-2xl shadow-soft animate-slide-up">
           {error}
         </div>
       )}
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>Login to your account</CardDescription>
+      <Card className="shadow-xl bg-card/50 backdrop-blur-xl overflow-hidden relative">
+        {/* Decorative gradient */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-primary via-accent to-primary"></div>
+
+        <CardHeader className="text-center space-y-2 pt-8">
+          <CardTitle className="text-2xl font-bold gradient-text">
+            Welcome back
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Login to your account
+          </CardDescription>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="pb-8">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email" className="font-semibold">
+                  Email
+                </FieldLabel>
                 <Input
                   id="email"
                   type="email"
@@ -88,16 +100,19 @@ export function LoginForm({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 rounded-xl bg-background/50 backdrop-blur-sm shadow-sm focus:shadow-md transition-all"
                 />
               </Field>
               <Field>
                 <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <FieldLabel htmlFor="password" className="font-semibold">
+                    Password
+                  </FieldLabel>
                   <a
                     href="#"
-                    className="ml-auto text-sm underline-offset-4 hover:underline text-primary"
+                    className="ml-auto text-sm underline-offset-4 hover:underline text-primary font-medium transition-colors"
                   >
-                    Forgot your password?
+                    Forgot password?
                   </a>
                 </div>
                 <Input
@@ -106,17 +121,14 @@ export function LoginForm({
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="h-12 rounded-xl bg-background/50 backdrop-blur-sm shadow-sm focus:shadow-md transition-all"
                 />
               </Field>
-              <Field>
+              <Field className="mt-2">
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="
-                    w-full 
-                    bg-primary text-primary-foreground hover:bg-primary/90
-                    dark:bg-white/90 dark:text-foreground dark:border dark:border-border dark:hover:bg-white
-                  "
+                  className="w-full h-12"
                 >
                   {isLoading ? (
                     <>
@@ -127,9 +139,12 @@ export function LoginForm({
                     "Login"
                   )}
                 </Button>
-                <FieldDescription className="text-center">
+                <FieldDescription className="text-center mt-4">
                   Don't have an account?{" "}
-                  <a href="/Register" className="text-primary hover:underline">
+                  <a
+                    href="/Register"
+                    className="text-primary hover:underline font-semibold transition-colors"
+                  >
                     Sign up
                   </a>
                 </FieldDescription>

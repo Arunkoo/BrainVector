@@ -56,24 +56,34 @@ export function SignupForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div
+      className={cn("flex flex-col gap-6 animate-fade-in", className)}
+      {...props}
+    >
       {error && (
-        <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/30 rounded-lg">
+        <div className="p-4 text-sm text-destructive-foreground bg-destructive/10 backdrop-blur-sm rounded-2xl shadow-soft animate-slide-up">
           {error}
         </div>
       )}
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Create your account</CardTitle>
-          <CardDescription>
-            Enter your email below to create your account
+      <Card className="shadow-xl bg-card/50 backdrop-blur-xl overflow-hidden relative">
+        {/* Decorative gradient */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-primary via-accent to-primary"></div>
+
+        <CardHeader className="text-center space-y-2 pt-8">
+          <CardTitle className="text-2xl font-bold gradient-text">
+            Create your account
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Enter your details to get started
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-8">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="name">Full Name</FieldLabel>
+                <FieldLabel htmlFor="name" className="font-semibold">
+                  Full Name
+                </FieldLabel>
                 <Input
                   id="name"
                   name="name"
@@ -82,10 +92,13 @@ export function SignupForm({
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className="h-12 rounded-xl bg-background/50 backdrop-blur-sm shadow-sm focus:shadow-md transition-all"
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email" className="font-semibold">
+                  Email
+                </FieldLabel>
                 <Input
                   id="email"
                   name="email"
@@ -94,32 +107,32 @@ export function SignupForm({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 rounded-xl bg-background/50 backdrop-blur-sm shadow-sm focus:shadow-md transition-all"
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldLabel htmlFor="password" className="font-semibold">
+                  Password
+                </FieldLabel>
                 <Input
                   id="password"
                   name="password"
                   type="password"
                   required
-                  placeholder="......"
+                  placeholder="Create a strong password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="h-12 rounded-xl bg-background/50 backdrop-blur-sm shadow-sm focus:shadow-md transition-all"
                 />
-                <FieldDescription>
+                <FieldDescription className="text-xs">
                   Must be at least 6 characters long.
                 </FieldDescription>
               </Field>
-              <Field>
+              <Field className="mt-2">
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="
-                    w-full 
-                    bg-primary text-primary-foreground hover:bg-primary/90
-                    dark:bg-white/90 dark:text-foreground dark:border dark:border-border dark:hover:bg-white
-                  "
+                  className="w-full h-12"
                 >
                   {isLoading ? (
                     <>
@@ -130,9 +143,12 @@ export function SignupForm({
                     "Create Account"
                   )}
                 </Button>
-                <FieldDescription className="text-center">
+                <FieldDescription className="text-center mt-4">
                   Already have an account?{" "}
-                  <a href="/Login" className="text-primary hover:underline">
+                  <a
+                    href="/Login"
+                    className="text-primary hover:underline font-semibold transition-colors"
+                  >
                     Login
                   </a>
                 </FieldDescription>

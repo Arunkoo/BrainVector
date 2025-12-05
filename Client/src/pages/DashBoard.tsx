@@ -14,10 +14,10 @@ import {
 import type { WorkspaceRole } from "../api/workspace.api";
 
 const ROLE_COLORS: Record<WorkspaceRole, string> = {
-  Owner: "bg-rose-500",
-  Admin: "bg-amber-500",
-  Editor: "bg-emerald-500",
-  Viewer: "bg-sky-500",
+  Owner: "bg-gradient-to-r from-rose-500 to-pink-500",
+  Admin: "bg-gradient-to-r from-amber-500 to-orange-500",
+  Editor: "bg-gradient-to-r from-emerald-500 to-green-500",
+  Viewer: "bg-gradient-to-r from-sky-500 to-blue-500",
 };
 
 const ROLE_LABELS: WorkspaceRole[] = ["Owner", "Admin", "Editor", "Viewer"];
@@ -86,27 +86,32 @@ const Dashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-full bg-background text-foreground">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <div className="min-h-full bg-transparent text-foreground">
+      <div className="mx-auto max-w-7xl space-y-8 animate-fade-in">
         {/* Header */}
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold">Dashboard</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Welcome, {user?.name || user?.email}
+            <h1 className="text-3xl sm:text-4xl font-bold gradient-text">
+              Dashboard
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Welcome back,{" "}
+              <span className="font-semibold text-foreground">
+                {user?.name || user?.email}
+              </span>
             </p>
           </div>
 
-          {/* Create workspace pill */}
+          {/* Create workspace */}
           <form
             onSubmit={handleCreate}
-            className="flex w-full max-w-md items-stretch rounded-full border border-border bg-card shadow-sm overflow-hidden"
+            className="flex w-full max-w-md items-stretch rounded-2xl bg-background/50 backdrop-blur-sm shadow-soft overflow-hidden"
           >
             <input
               value={newWorkspaceName}
               onChange={(e) => setNewWorkspaceName(e.target.value)}
               placeholder="Workspace name"
-              className="flex-1 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              className="flex-1 bg-transparent px-5 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
               disabled={isLoading}
               aria-label="Workspace name"
             />
@@ -114,10 +119,11 @@ const Dashboard: React.FC = () => {
               type="submit"
               disabled={isLoading || !newWorkspaceName.trim()}
               className="
-                mx-1 my-1 flex items-center justify-center rounded-full px-4 text-xs sm:text-sm font-medium
-                bg-primary text-primary-foreground hover:bg-primary/90
-                dark:bg-white/90 dark:text-foreground dark:border dark:border-border dark:hover:bg-white
-                disabled:cursor-not-allowed disabled:opacity-60
+                mx-1.5 my-1.5 flex items-center justify-center rounded-xl px-6 text-sm font-semibold
+                bg-linear-to-r from-primary to-accent text-primary-foreground
+                hover:shadow-lg hover:shadow-primary/25 hover:scale-105 active:scale-95
+                disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100
+                transition-all duration-300
               "
               aria-label="Create new workspace"
             >
@@ -127,17 +133,19 @@ const Dashboard: React.FC = () => {
         </header>
 
         {error && (
-          <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
+          <div className="rounded-2xl bg-destructive/10 backdrop-blur-sm px-5 py-4 text-sm text-destructive-foreground shadow-soft animate-slide-up">
             {error}
           </div>
         )}
 
         {/* Stats row */}
-        <section className="grid grid-cols-3 gap-3 sm:gap-4">
-          <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px]">
-            <div className="space-y-0.5">
-              <p className="text-xs text-muted-foreground">Workspaces</p>
-              <p className="text-base sm:text-lg font-semibold">
+        <section className="grid grid-cols-3 gap-4 sm:gap-5">
+          <div className="rounded-2xl bg-card/30 backdrop-blur-sm px-5 py-4 shadow-soft hover:shadow-md transition-all duration-300 min-h-[90px] flex items-center group">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Workspaces
+              </p>
+              <p className="text-2xl sm:text-3xl font-bold gradient-text group-hover:scale-110 transition-transform duration-300">
                 {workspaces.length}
               </p>
             </div>
@@ -147,40 +155,38 @@ const Dashboard: React.FC = () => {
           <div className="relative">
             <button
               type="button"
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px] hover:bg-muted transition-colors"
+              className="w-full rounded-2xl bg-card/30 backdrop-blur-sm px-5 py-4 shadow-soft hover:shadow-md transition-all duration-300 flex items-center justify-between min-h-[90px] group"
               onClick={() => setFilterOpen((open) => !open)}
             >
-              <div className="space-y-0.5 text-left">
-                <p className="text-xs text-muted-foreground">Filter</p>
-                <p className="text-sm font-medium capitalize text-foreground">
+              <div className="space-y-1 text-left">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Filter
+                </p>
+                <p className="text-sm font-bold capitalize text-foreground group-hover:text-primary transition-colors">
                   {roleFilter === "all" ? "All" : roleFilter}
                 </p>
               </div>
               <ChevronDown
-                className={`h-4 w-4 text-muted-foreground transition-transform ${
-                  filterOpen ? "rotate-180" : ""
+                className={`h-5 w-5 text-muted-foreground transition-all duration-300 ${
+                  filterOpen
+                    ? "rotate-180 text-primary"
+                    : "group-hover:text-primary"
                 }`}
               />
             </button>
 
             {filterOpen && (
-              <div
-                className="
-                  absolute z-40 top-full left-0 mt-2 w-full
-                  rounded-2xl border border-border bg-card/95 backdrop-blur-xl
-                  shadow-xl shadow-black/20 dark:shadow-black/40
-                "
-              >
-                <div className="py-1.5 ">
+              <div className="absolute z-40 top-full left-0 mt-2 w-full rounded-2xl bg-card/95 backdrop-blur-xl shadow-xl overflow-hidden animate-scale-in">
+                <div className="py-2">
                   <button
                     onClick={() => {
                       setRoleFilter("all");
                       setFilterOpen(false);
                     }}
-                    className={`block w-full px-3 py-2.5 text-left text-sm font-medium ${
+                    className={`block w-full px-4 py-3 text-left text-sm font-semibold transition-all ${
                       roleFilter === "all"
                         ? "bg-primary/10 text-primary"
-                        : "text-foreground hover:bg-muted"
+                        : "text-foreground hover:bg-secondary/50"
                     }`}
                   >
                     All roles
@@ -192,10 +198,10 @@ const Dashboard: React.FC = () => {
                         setRoleFilter(role);
                         setFilterOpen(false);
                       }}
-                      className={`block w-full px-3 py-2.5 text-left text-sm font-medium capitalize ${
+                      className={`block w-full px-4 py-3 text-left text-sm font-semibold capitalize transition-all ${
                         roleFilter === role
                           ? "bg-primary/10 text-primary"
-                          : "text-foreground hover:bg-muted"
+                          : "text-foreground hover:bg-secondary/50"
                       }`}
                     >
                       {role}
@@ -206,56 +212,76 @@ const Dashboard: React.FC = () => {
             )}
           </div>
 
-          <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm flex items-center justify-between min-h-[72px]">
-            <div className="space-y-0.5">
-              <p className="text-xs text-muted-foreground">Status</p>
-              <p className="text-sm font-medium">
-                {isLoading ? "Syncing" : "Ready"}
+          <div className="rounded-2xl bg-card/30 backdrop-blur-sm px-5 py-4 shadow-soft hover:shadow-md transition-all duration-300 min-h-[90px] flex items-center">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Status
+              </p>
+              <p className="text-sm font-bold">
+                {isLoading ? (
+                  <span className="text-primary animate-pulse">Syncing</span>
+                ) : (
+                  <span className="text-emerald-500">Ready</span>
+                )}
               </p>
             </div>
           </div>
         </section>
 
         {/* Workspaces + pagination */}
-        <section className="space-y-4">
+        <section className="space-y-5">
           {isLoading && !workspaces.length && (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-card px-8 py-12 text-center shadow-sm">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
-              <p className="text-sm font-medium text-muted-foreground">
+            <div className="flex flex-col items-center justify-center gap-4 rounded-3xl bg-card/20 backdrop-blur-sm px-8 py-16 text-center shadow-soft">
+              <div className="relative h-12 w-12">
+                <div className="absolute inset-0 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
+                <div className="absolute inset-0 animate-ping rounded-full bg-primary/20"></div>
+              </div>
+              <p className="text-sm font-semibold text-muted-foreground">
                 Loading workspaces…
               </p>
             </div>
           )}
 
           {!isLoading && workspaces.length === 0 && (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-card px-8 py-12 text-center shadow-sm">
-              <p className="text-lg font-semibold">No workspaces yet</p>
-              <p className="text-sm text-muted-foreground">
-                Create your first workspace above.
+            <div className="flex flex-col items-center justify-center gap-4 rounded-3xl bg-card/20 backdrop-blur-sm px-8 py-16 text-center shadow-soft">
+              <div className="h-20 w-20 rounded-2xl bg-linear-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-2">
+                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-primary to-accent opacity-50"></div>
+              </div>
+              <p className="text-xl font-bold gradient-text">
+                No workspaces yet
+              </p>
+              <p className="text-sm text-muted-foreground max-w-md">
+                Create your first workspace above to get started with your
+                projects.
               </p>
             </div>
           )}
 
           {filteredWorkspaces.length > 0 && currentItems.length === 0 && (
-            <div className="rounded-2xl border-2 border-dashed border-border bg-card px-6 py-8 text-center text-sm text-muted-foreground shadow-sm">
+            <div className="rounded-3xl bg-card/20 backdrop-blur-sm px-6 py-12 text-center text-sm text-muted-foreground shadow-soft">
               No workspaces match this filter.
             </div>
           )}
 
           {currentItems.length > 0 && (
             <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {currentItems.map((ws) => {
                   const role = ws.currentUserRole;
-                  const color = ROLE_COLORS[role] || "bg-slate-500";
+                  const color =
+                    ROLE_COLORS[role] ||
+                    "bg-gradient-to-r from-slate-500 to-gray-500";
 
                   return (
                     <div
                       key={ws.id}
-                      className="group flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:border-primary/40 hover:cursor-pointer transition-all duration-200"
+                      className="group flex flex-col rounded-3xl bg-card/40 backdrop-blur-sm p-6 shadow-soft hover:shadow-xl hover:scale-[1.02] hover:cursor-pointer transition-all duration-300 relative overflow-hidden"
                     >
+                      {/* Hover gradient overlay */}
+                      <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
                       <div
-                        className="flex flex-col h-full"
+                        className="flex flex-col h-full relative z-10"
                         role="button"
                         tabIndex={0}
                         onClick={() =>
@@ -269,17 +295,18 @@ const Dashboard: React.FC = () => {
                         }}
                       >
                         <div className="flex items-start justify-between gap-4">
-                          <div className="min-w-0">
-                            <h3 className="truncate text-lg font-semibold group-hover:text-primary transition-colors">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate text-xl font-bold group-hover:text-primary transition-colors">
                               {ws.name || "Untitled workspace"}
                             </h3>
-                            <p className="mt-1 text-xs text-muted-foreground">
+                            <p className="mt-1.5 text-xs text-muted-foreground font-medium">
+                              Created{" "}
                               {new Date(ws.createdAt).toLocaleDateString()}
                             </p>
                           </div>
 
                           <span
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${color}`}
+                            className={`inline-flex items-center rounded-xl px-3 py-1.5 text-xs font-bold text-white shadow-lg ${color}`}
                           >
                             {role}
                           </span>
@@ -287,18 +314,18 @@ const Dashboard: React.FC = () => {
                       </div>
 
                       {(role === "Owner" || role === "Admin") && (
-                        <div className="mt-6 pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="mt-6 pt-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground relative z-10">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleInvite(ws.id);
                             }}
-                            className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                            className="font-bold text-primary hover:text-primary/80 transition-colors hover:scale-105 active:scale-95"
                             aria-label={`Invite member to ${ws.name}`}
                           >
                             Invite
                           </button>
-                          <span className="text-[11px]">Members</span>
+                          <span className="text-xs font-semibold">Members</span>
                         </div>
                       )}
                     </div>
@@ -307,16 +334,16 @@ const Dashboard: React.FC = () => {
               </div>
 
               {totalPages > 1 && (
-                <div className="flex items-center justify-between gap-3 pt-2">
-                  <div className="text-xs text-muted-foreground">
+                <div className="flex items-center justify-between gap-3 pt-3">
+                  <div className="text-sm text-muted-foreground font-medium">
                     Page {currentPage} of {totalPages}
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="px-2 py-1 text-xs rounded-md border border-border bg-card text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
+                      className="px-4 py-2 text-sm font-semibold rounded-xl bg-background/50 backdrop-blur-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-secondary/50 hover:scale-105 active:scale-95 transition-all shadow-sm"
                     >
                       Prev
                     </button>
@@ -326,10 +353,10 @@ const Dashboard: React.FC = () => {
                           key={page}
                           type="button"
                           onClick={() => setCurrentPage(page)}
-                          className={`px-2.5 py-1 text-xs rounded-md border ${
+                          className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all shadow-sm ${
                             currentPage === page
-                              ? "border-primary bg-primary text-primary-foreground dark:bg-white/90 dark:text-foreground"
-                              : "border-border bg-card text-foreground hover:bg-muted"
+                              ? "bg-linear-to-r from-primary to-accent text-primary-foreground shadow-lg scale-110"
+                              : "bg-background/50 backdrop-blur-sm text-foreground hover:bg-secondary/50 hover:scale-105 active:scale-95"
                           }`}
                         >
                           {page}
@@ -342,7 +369,7 @@ const Dashboard: React.FC = () => {
                         setCurrentPage((p) => Math.min(totalPages, p + 1))
                       }
                       disabled={currentPage === totalPages}
-                      className="px-2 py-1 text-xs rounded-md border border-border bg-card text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
+                      className="px-4 py-2 text-sm font-semibold rounded-xl bg-background/50 backdrop-blur-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-secondary/50 hover:scale-105 active:scale-95 transition-all shadow-sm"
                     >
                       Next
                     </button>

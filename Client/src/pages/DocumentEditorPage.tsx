@@ -6,18 +6,17 @@ import {
   Trash2,
   Bold,
   Italic,
-  Underline, // Lucide Icon
+  Underline,
   List,
   ListOrdered,
   Quote,
   Code,
   Heading1,
   Heading2,
-  Strikethrough, // Added
+  Strikethrough,
 } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-// ✅ CRITICAL FIX: Renamed Tiptap extension to avoid collision with Lucide Icon
 import UnderlineExtension from "@tiptap/extension-underline";
 import Blockquote from "@tiptap/extension-blockquote";
 import CodeBlock from "@tiptap/extension-code-block";
@@ -25,9 +24,6 @@ import Heading from "@tiptap/extension-heading";
 import Link from "@tiptap/extension-link";
 import { useDocumentStore } from "../store/document.store";
 import { useWorkspaces } from "../store/workspace.store";
-
-// Assuming types from store
-// type DocumentType = { id: string; title: string; content: string };
 
 const DocumentEditorPage: React.FC = () => {
   const { workspaceId, documentId } = useParams<{
@@ -60,7 +56,6 @@ const DocumentEditorPage: React.FC = () => {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // Disable extensions that will be configured separately
         underline: false,
         blockquote: false,
         codeBlock: false,
@@ -73,7 +68,7 @@ const DocumentEditorPage: React.FC = () => {
       Link.configure({ openOnClick: false }),
     ],
     editable: canEdit,
-    content: "", // Start with empty content
+    content: "",
     editorProps: {
       attributes: {
         class:
@@ -81,22 +76,18 @@ const DocumentEditorPage: React.FC = () => {
       },
     },
     onUpdate: ({ editor }) => {
-      // Clear previous timeout
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
 
       const html = editor.getHTML();
-      // Use getText() for a more accurate word count
       const text = editor.getText();
       setWordCount(text.split(/\s+/).filter(Boolean).length);
 
-      // Debounced autosave
       saveTimeoutRef.current = setTimeout(async () => {
         if (canEdit && workspaceId && documentId && title.trim()) {
           setIsAutoSaving(true);
           try {
-            // NOTE: If title state has not updated yet, it will use the old title
             await update(workspaceId, documentId, {
               title,
               content: html,
@@ -109,25 +100,21 @@ const DocumentEditorPage: React.FC = () => {
     },
   });
 
-  // Fetch document on load
   useEffect(() => {
     if (workspaceId && documentId) {
       fetchOne(workspaceId, documentId);
     }
   }, [workspaceId, documentId, fetchOne]);
 
-  // Update editor content safely when document loads
   useEffect(() => {
     if (document && editor && !editor.isDestroyed) {
       setTitle(document.title);
-      // Only set content if it's different to avoid re-rendering issues
       if (document.content !== editor.getHTML()) {
         editor.commands.setContent(document.content);
       }
     }
   }, [document, editor]);
 
-  // Manual save handler
   const handleSave = useCallback(async () => {
     if (
       !workspaceId ||
@@ -150,11 +137,10 @@ const DocumentEditorPage: React.FC = () => {
     }
   }, [workspaceId, documentId, title, editor, update]);
 
-  // Cleanup debounce timer on unmount
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      editor?.destroy(); // Clean up Tiptap instance
+      editor?.destroy();
     };
   }, [editor]);
 
@@ -166,36 +152,52 @@ const DocumentEditorPage: React.FC = () => {
     navigate(`/workspace/${workspaceId}/documents`);
   };
 
-  // Toolbar command handlers
-  const setBold = () => editor?.chain().focus().toggleBold().run();
-  const setItalic = () => editor?.chain().focus().toggleItalic().run();
-  const setUnderline = () => editor?.chain().focus().toggleUnderline().run();
-  // Uses StarterKit's built-in strike extension
-  const setStrike = () => editor?.chain().focus().toggleStrike().run();
-  const setBulletList = () => editor?.chain().focus().toggleBulletList().run();
-  const setOrderedList = () =>
-    editor?.chain().focus().toggleOrderedList().run();
-  const setBlockquote = () => editor?.chain().focus().toggleBlockquote().run();
-  const setCodeBlock = () => editor?.chain().focus().toggleCodeBlock().run();
-  const setHeading = (level: 1 | 2 | 3) =>
-    editor?.chain().focus().toggleHeading({ level }).run();
+  interface ToolbarButtonProps {
+    onClick: () => void;
+    active: boolean;
+    icon: React.ComponentType<{ className?: string }>;
+    title: string;
+  }
+
+  const ToolbarButton = ({
+    onClick,
+    active,
+    icon: Icon,
+    title,
+  }: ToolbarButtonProps) => (
+    <button
+      onClick={onClick}
+      className={`p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center group ${
+        active
+          ? "bg-linear-to-r from-primary to-accent text-primary-foreground shadow-lg scale-110"
+          : "hover:bg-secondary/50 hover:scale-110 active:scale-95"
+      }`}
+      title={title}
+      type="button"
+    >
+      <Icon className={`h-4 w-4 ${active ? "" : "group-hover:text-primary"}`} />
+    </button>
+  );
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
-        <p className="mt-3 text-sm">Loading document...</p>
+      <div className="flex flex-col items-center justify-center h-96 text-muted-foreground animate-fade-in">
+        <div className="relative h-12 w-12">
+          <div className="absolute inset-0 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
+          <div className="absolute inset-0 animate-ping rounded-full bg-primary/20"></div>
+        </div>
+        <p className="mt-4 text-sm font-semibold">Loading document...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-8 text-sm text-destructive-foreground">
+      <div className="rounded-2xl bg-destructive/10 backdrop-blur-sm p-8 text-sm text-destructive-foreground shadow-soft animate-slide-up">
         {error}
         <button
           onClick={() => navigate(`/workspace/${workspaceId}/documents`)}
-          className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 font-medium"
+          className="mt-4 px-6 py-3 bg-linear-to-r from-primary to-accent text-primary-foreground rounded-xl hover:shadow-lg font-semibold transition-all hover:scale-105 active:scale-95"
         >
           Back to Documents
         </button>
@@ -205,11 +207,11 @@ const DocumentEditorPage: React.FC = () => {
 
   if (!document) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground text-center">
-        <p className="text-lg font-semibold mb-2">Document not found</p>
+      <div className="flex flex-col items-center justify-center h-96 text-muted-foreground text-center animate-fade-in">
+        <p className="text-xl font-bold mb-3">Document not found</p>
         <button
           onClick={() => navigate(`/workspace/${workspaceId}/documents`)}
-          className="px-6 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 font-medium"
+          className="px-8 py-3 bg-linear-to-r from-primary to-accent text-primary-foreground rounded-xl hover:shadow-lg font-semibold transition-all hover:scale-105 active:scale-95"
         >
           Back to Documents
         </button>
@@ -218,21 +220,29 @@ const DocumentEditorPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 h-full flex flex-col">
+    <div className="space-y-6 h-full flex flex-col animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(`/workspace/${workspaceId}/documents`)}
-            className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 p-2 -ml-1 rounded-lg hover:bg-primary/5 transition-colors"
+            className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 p-2 -ml-1 rounded-xl hover:bg-primary/5 transition-all hover:scale-105 active:scale-95"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-5 w-5" />
             Documents
           </button>
           <div>
-            <h1 className="text-2xl font-semibold">{workspace?.name}</h1>
-            <p className="text-xs text-muted-foreground">
-              {isAutoSaving ? "Auto-saving..." : "All changes auto-saved"}
+            <h1 className="text-2xl font-bold gradient-text">
+              {workspace?.name}
+            </h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isAutoSaving ? (
+                <span className="text-primary animate-pulse">
+                  Auto-saving...
+                </span>
+              ) : (
+                <span className="text-emerald-500">All changes saved</span>
+              )}
             </p>
           </div>
         </div>
@@ -242,14 +252,14 @@ const DocumentEditorPage: React.FC = () => {
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-linear-to-r from-primary to-accent text-primary-foreground hover:shadow-lg hover:shadow-primary/25 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95"
               >
                 <Save className="h-4 w-4" />
-                {isSaving ? "Saving..." : "Save Now"}
+                {isSaving ? "Saving..." : "Save"}
               </button>
               <button
                 onClick={handleDelete}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm font-medium text-sm transition-all"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-destructive text-destructive-foreground hover:shadow-lg hover:shadow-destructive/25 font-semibold text-sm transition-all hover:scale-105 active:scale-95"
               >
                 <Trash2 className="h-4 w-4" />
                 Delete
@@ -260,156 +270,115 @@ const DocumentEditorPage: React.FC = () => {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 flex flex-col bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
+      <div className="flex-1 flex flex-col bg-card/40 backdrop-blur-xl rounded-3xl shadow-soft overflow-hidden">
         {/* Title */}
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Untitled document"
-          className="w-full px-8 py-6 text-3xl font-bold bg-transparent border-b border-border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+          className="w-full px-8 py-6 text-3xl font-bold bg-transparent focus:outline-none focus:bg-secondary/10 transition-colors resize-none"
           disabled={!canEdit}
           maxLength={255}
         />
 
         {/* Toolbar */}
         {canEdit && editor && (
-          <div className="border-b border-border px-6 py-3 bg-background/80 backdrop-blur-sm flex items-center gap-1 flex-wrap shadow-sm">
-            {/* Text formatting */}
+          <div className="px-6 py-3 bg-background/50 backdrop-blur-sm flex items-center gap-2 flex-wrap shadow-sm">
             <div className="flex items-center gap-1">
-              <button
-                onClick={setBold}
-                className={`p-2.5 rounded-xl hover:bg-muted transition-all flex items-center justify-center ${
-                  editor.isActive("bold")
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : ""
-                }`}
-                title="Bold (⌘+B)"
-              >
-                <Bold className="h-4 w-4" />
-              </button>
-              <button
-                onClick={setItalic}
-                className={`p-2.5 rounded-xl hover:bg-muted transition-all flex items-center justify-center ${
-                  editor.isActive("italic")
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : ""
-                }`}
-                title="Italic (⌘+I)"
-              >
-                <Italic className="h-4 w-4" />
-              </button>
-              <button
-                onClick={setUnderline}
-                className={`p-2.5 rounded-xl hover:bg-muted transition-all flex items-center justify-center ${
-                  editor.isActive("underline")
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : ""
-                }`}
-                title="Underline (⌘+U)"
-              >
-                <Underline className="h-4 w-4" />
-              </button>
-              <button
-                onClick={setStrike}
-                className={`p-2.5 rounded-xl hover:bg-muted transition-all flex items-center justify-center ${
-                  editor.isActive("strike")
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : ""
-                }`}
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                active={editor.isActive("bold")}
+                icon={Bold}
+                title="Bold"
+              />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                active={editor.isActive("italic")}
+                icon={Italic}
+                title="Italic"
+              />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                active={editor.isActive("underline")}
+                icon={Underline}
+                title="Underline"
+              />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleStrike().run()}
+                active={editor.isActive("strike")}
+                icon={Strikethrough}
                 title="Strikethrough"
-              >
-                <Strikethrough className="h-4 w-4" />
-              </button>
+              />
             </div>
 
-            {/* Lists & Blocks */}
+            <div className="w-px h-6 bg-border mx-1"></div>
+
             <div className="flex items-center gap-1">
-              <button
-                onClick={setBulletList}
-                className={`p-2.5 rounded-xl hover:bg-muted transition-all flex items-center justify-center ${
-                  editor.isActive("bulletList")
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : ""
-                }`}
-                title="Bullet list (⌘+Shift+8)"
-              >
-                <List className="h-4 w-4" />
-              </button>
-              <button
-                onClick={setOrderedList}
-                className={`p-2.5 rounded-xl hover:bg-muted transition-all flex items-center justify-center ${
-                  editor.isActive("orderedList")
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : ""
-                }`}
-                title="Numbered list (⌘+Shift+7)"
-              >
-                <ListOrdered className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setHeading(1)}
-                className={`p-2.5 rounded-xl hover:bg-muted transition-all flex items-center justify-center ${
-                  editor.isActive("heading", { level: 1 })
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : ""
-                }`}
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                active={editor.isActive("bulletList")}
+                icon={List}
+                title="Bullet list"
+              />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                active={editor.isActive("orderedList")}
+                icon={ListOrdered}
+                title="Numbered list"
+              />
+              <ToolbarButton
+                onClick={() =>
+                  editor.chain().focus().toggleHeading({ level: 1 }).run()
+                }
+                active={editor.isActive("heading", { level: 1 })}
+                icon={Heading1}
                 title="Heading 1"
-              >
-                <Heading1 className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setHeading(2)}
-                className={`p-2.5 rounded-xl hover:bg-muted transition-all flex items-center justify-center ${
-                  editor.isActive("heading", { level: 2 })
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : ""
-                }`}
+              />
+              <ToolbarButton
+                onClick={() =>
+                  editor.chain().focus().toggleHeading({ level: 2 }).run()
+                }
+                active={editor.isActive("heading", { level: 2 })}
+                icon={Heading2}
                 title="Heading 2"
-              >
-                <Heading2 className="h-4 w-4" />
-              </button>
+              />
             </div>
 
-            {/* Blocks */}
+            <div className="w-px h-6 bg-border mx-1"></div>
+
             <div className="flex items-center gap-1">
-              <button
-                onClick={setBlockquote}
-                className={`p-2.5 rounded-xl hover:bg-muted transition-all flex items-center justify-center ${
-                  editor.isActive("blockquote")
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : ""
-                }`}
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                active={editor.isActive("blockquote")}
+                icon={Quote}
                 title="Blockquote"
-              >
-                <Quote className="h-4 w-4" />
-              </button>
-              <button
-                onClick={setCodeBlock}
-                className={`p-2.5 rounded-xl hover:bg-muted transition-all flex items-center justify-center ${
-                  editor.isActive("codeBlock")
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : ""
-                }`}
+              />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                active={editor.isActive("codeBlock")}
+                icon={Code}
                 title="Code block"
-              >
-                <Code className="h-4 w-4" />
-              </button>
+              />
             </div>
           </div>
         )}
 
         {/* Editor Content */}
-        <div className="flex-1 min-h-[500px] p-8 overflow-auto prose prose-headings:font-bold prose-headings:tracking-tight max-w-none">
+        <div className="flex-1 min-h-[600px] p-8 overflow-auto">
           {editor && <EditorContent editor={editor} />}
         </div>
       </div>
 
       {/* Word count & Status */}
       {(wordCount > 0 || isAutoSaving) && (
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{wordCount} words</span>
-          <span className="font-medium">
-            {isAutoSaving ? "Auto-saving..." : "All changes saved"}
+        <div className="flex items-center justify-between text-sm text-muted-foreground bg-card/30 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-soft">
+          <span className="font-semibold">{wordCount} words</span>
+          <span className="font-semibold">
+            {isAutoSaving ? (
+              <span className="text-primary">Auto-saving...</span>
+            ) : (
+              <span className="text-emerald-500">All changes saved</span>
+            )}
           </span>
         </div>
       )}
