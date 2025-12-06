@@ -8,7 +8,7 @@ import DashBoard from "../pages/DashBoard";
 import SignupPage from "../pages/SignupPage";
 import DocumentsPage from "../pages/DocumentPage";
 import DocumentEditorPage from "../pages/DocumentEditorPage";
-import RedirectIfLoggedIn from "../components/RedirectIfLoggedIn";
+// import RedirectIfLoggedIn from "../components/RedirectIfLoggedIn";
 
 const router = createBrowserRouter([
   {
@@ -22,20 +22,12 @@ const router = createBrowserRouter([
 
       {
         path: "login",
-        element: (
-          <RedirectIfLoggedIn>
-            <LoginPage />
-          </RedirectIfLoggedIn>
-        ),
+        element: <LoginPage />,
       },
 
       {
         path: "register",
-        element: (
-          <RedirectIfLoggedIn>
-            <SignupPage />
-          </RedirectIfLoggedIn>
-        ),
+        element: <SignupPage />,
       },
 
       {
