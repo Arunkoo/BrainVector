@@ -38,7 +38,7 @@ const AppLayout = () => {
       </div>
 
       {/* Sticky Navbar with top spacing */}
-      <div className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60 border-b border-border">
+      <div className="sticky top-0 z-50 w-full bg-background/80  supports-backdrop-filter:bg-background/60  border-border">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <Navbar />
         </div>
