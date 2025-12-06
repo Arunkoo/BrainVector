@@ -139,7 +139,7 @@ export function LoginForm({
                 <FieldDescription className="text-center mt-4 text-sm">
                   Don't have an account?{" "}
                   <a
-                    href="/Register"
+                    href="/register"
                     className="text-primary hover:underline font-medium"
                   >
                     Sign up

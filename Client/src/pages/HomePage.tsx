@@ -29,7 +29,7 @@ const HomePage = () => {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <a
-              href="https://github.com"
+              href="https://github.com/Arunkoo/BrainVector"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-border font-medium rounded-lg hover:bg-muted"
@@ -166,8 +166,8 @@ const HomePage = () => {
       <footer className="py-8 px-4 text-center border-t border-border">
         <div className="max-w-4xl mx-auto">
           <p className="text-sm text-muted-foreground">
-            A showcase project demonstrating modern web development skills •{" "}
-            {new Date().getFullYear()}
+            A showcase project demonstrating modern Full-stack Development
+            skills • {new Date().getFullYear()}
           </p>
         </div>
       </footer>
