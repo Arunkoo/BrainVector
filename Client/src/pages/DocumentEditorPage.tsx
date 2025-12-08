@@ -25,6 +25,7 @@ import Heading from "@tiptap/extension-heading";
 import Link from "@tiptap/extension-link";
 import { useDocumentStore } from "../store/document.store";
 import { useWorkspaces } from "../store/workspace.store";
+import { io, Socket } from "socket.io-client"; // <-- ADDED
 
 const DocumentEditorPage: React.FC = () => {
   const { workspaceId, documentId } = useParams<{
@@ -48,6 +49,9 @@ const DocumentEditorPage: React.FC = () => {
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
+
+  const socketRef = useRef<Socket | null>(null); // <-- ADDED
+  const isRemoteUpdate = useRef(false); // <-- ADDED
 
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const canEdit =
@@ -76,6 +80,16 @@ const DocumentEditorPage: React.FC = () => {
       },
     },
     onUpdate: ({ editor }) => {
+      // ------------------- REAL-TIME EMIT -------------------
+      if (!isRemoteUpdate.current && socketRef.current) {
+        socketRef.current.emit("contentChange", {
+          workspaceId,
+          documentId,
+          content: editor.getHTML(),
+        });
+      }
+      // ------------------------------------------------------
+
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
@@ -99,6 +113,31 @@ const DocumentEditorPage: React.FC = () => {
       }, 1000);
     },
   });
+
+  // ------------------- REAL-TIME SOCKET EFFECT -------------------
+  useEffect(() => {
+    if (!workspaceId || !documentId || !editor) return;
+
+    const socket = io("http://localhost:3000", { transports: ["websocket"] });
+    socketRef.current = socket;
+
+    socket.emit("joinDocument", { workspaceId, documentId });
+
+    socket.on("contentChange", (data) => {
+      if (!editor || editor.isDestroyed) return;
+      if (!data?.content) return;
+
+      isRemoteUpdate.current = true;
+      editor.commands.setContent(data.content);
+      isRemoteUpdate.current = false;
+    });
+
+    return () => {
+      socket.emit("leaveDocument", { workspaceId, documentId });
+      socket.disconnect();
+    };
+  }, [workspaceId, documentId, editor]);
+  // -----------------------------------------------------------------
 
   useEffect(() => {
     if (workspaceId && documentId) {
