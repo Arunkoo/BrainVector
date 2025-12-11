@@ -58,18 +58,13 @@ export class WorkspaceController {
     @Param('workspaceId') workspaceId: string,
     @Body() dto: InviteUserDto,
   ) {
-    console.log('Invited user details..', dto.invitedUserId);
-    const invitedUserId = dto.invitedUserId;
     try {
-      await this.workspaceService.inviteUserToWorkspace(
+      return await this.workspaceService.inviteUserByEmail(
         workspaceId,
-        invitedUserId,
+        dto.inviteEmail,
       );
-      return { id: invitedUserId };
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
+      if (error instanceof HttpException) throw error;
       throw new HttpException(
         'Failed to invite user',
         HttpStatus.INTERNAL_SERVER_ERROR,

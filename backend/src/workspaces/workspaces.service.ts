@@ -106,47 +106,40 @@ export class WorkspaceService {
   }
 
   // Inviting a new user to our workspace...
-  async inviteUserToWorkspace(workspaceId: string, inviteUserId: string) {
-    const invitedUserCacheKey = `user_workspaces:${inviteUserId}`;
-    await this.cacheManager.del(invitedUserCacheKey);
-    console.log(
-      `[Cache Invalidation] Cleared workspace list for invited user ${inviteUserId}.`,
-    );
-
-    //check workspace exits..
-    const workspaceExists = await this.prisma.workspace.findUnique({
+  async inviteUserByEmail(workspaceId: string, userEmail: string) {
+    // 1) Workspace exists?
+    const workspace = await this.prisma.workspace.findUnique({
       where: { id: workspaceId },
     });
-    if (!workspaceExists) {
-      throw new NotFoundException('Workspace not found');
-    }
+    if (!workspace) throw new NotFoundException('Workspace not found');
 
-    //check user exists
-    const userExists = await this.prisma.user.findUnique({
-      where: { id: inviteUserId },
+    // 2) User exists?
+    const user = await this.prisma.user.findUnique({
+      where: { email: userEmail },
     });
-    if (!userExists) {
-      throw new NotFoundException('Invited User not found');
-    }
+    if (!user) throw new NotFoundException('User not found');
 
-    //check if user alredy a member of a workspace..
-    const existingMembership = await this.prisma.workspaceMember.findFirst({
+    // 3) Check if already member
+    const existing = await this.prisma.workspaceMember.findFirst({
       where: {
-        userId: inviteUserId,
-        WorkspaceId: workspaceId,
+        userId: user.id,
+        WorkspaceId: workspaceId, // FIXED
       },
     });
-    if (existingMembership) {
-      throw new ConflictException(
-        'User is already a member of this workspace.',
-      );
+
+    if (existing) {
+      throw new ConflictException('User already a member');
     }
 
-    //if everything is fine means a fresh user..
-    return this.prisma.workspaceMember.create({
+    // 4) Invalidate correct cache
+    const invitedUserCacheKey = `user_workspace:${user.id}`;
+    await this.cacheManager.del(invitedUserCacheKey);
+
+    // 5) Create membership
+    return await this.prisma.workspaceMember.create({
       data: {
-        workspace: { connect: { id: workspaceId } },
-        user: { connect: { id: inviteUserId } },
+        WorkspaceId: workspaceId,
+        userId: user.id,
       },
       include: {
         user: {

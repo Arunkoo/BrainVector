@@ -1,3 +1,4 @@
+// src/pages/Dashboard.tsx
 import React, { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +8,7 @@ import {
   useWorkspaceLoading,
   useFetchWorkspaces,
   useCreateWorkspace,
+  useInviteUser, // <-- use existing store action
 } from "../store/workspace.store";
 import type { WorkspaceRole } from "../api/workspace.api";
 
@@ -22,16 +24,23 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const workspaces = useWorkspaces();
   const isLoading = useWorkspaceLoading();
-  // const error = useWorkspaceError();
   const fetchWorkspaces = useFetchWorkspaces();
   const createWorkspace = useCreateWorkspace();
-  // const inviteUser = useInviteUser();
+  const inviteUser = useInviteUser();
 
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [roleFilter, setRoleFilter] = useState<WorkspaceRole | "all">("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 6;
+
+  // Invite UI state (simple): only one workspace open at a time
+  const [inviteOpenWorkspaceId, setInviteOpenWorkspaceId] = useState<
+    string | null
+  >(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteMessage, setInviteMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -60,6 +69,37 @@ const Dashboard: React.FC = () => {
     startIndex,
     startIndex + ITEMS_PER_PAGE
   );
+
+  // Invite handler (single workspace)
+  const handleInvite = async (workspaceId: string) => {
+    // basic client-side validation
+    const email = inviteEmail.trim();
+    if (!email) {
+      setInviteMessage("Please enter an email.");
+      return;
+    }
+
+    setInviteLoading(true);
+    setInviteMessage(null);
+    try {
+      await inviteUser(workspaceId, email); // uses your zustand action -> backend
+      setInviteMessage("Invitation successful.");
+      setInviteEmail("");
+      // close input after success
+      setInviteOpenWorkspaceId(null);
+      // refresh workspace list so invited user appears for you if backend returns that
+      fetchWorkspaces();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      // show readable error
+      const msg =
+        (err && (err.response?.data?.message || err.message)) ||
+        "Failed to invite user";
+      setInviteMessage(msg);
+    } finally {
+      setInviteLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -144,9 +184,12 @@ const Dashboard: React.FC = () => {
             <div
               key={ws.id}
               className="rounded-lg border p-5 hover:border-primary/50 hover:shadow-sm transition-all cursor-pointer"
-              onClick={() => navigate(`/workspace/${ws.id}/documents`)}
             >
-              <div className="flex items-start justify-between">
+              {/* Clicking title/role navigates — we stop propagation on invite UI below */}
+              <div
+                className="flex items-start justify-between"
+                onClick={() => navigate(`/workspace/${ws.id}/documents`)}
+              >
                 <h3 className="font-semibold text-lg truncate">{ws.name}</h3>
                 <span
                   className={`px-2 py-1 text-xs font-medium text-white rounded-full ${
@@ -156,9 +199,68 @@ const Dashboard: React.FC = () => {
                   {ws.currentUserRole}
                 </span>
               </div>
+
               <p className="text-sm text-muted-foreground mt-2">
                 Created {new Date(ws.createdAt).toLocaleDateString()}
               </p>
+
+              {/* Simple Invite UI: one workspace at a time */}
+              <div
+                className="mt-4 border-t pt-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* show button when invite input closed for this workspace */}
+                {inviteOpenWorkspaceId !== ws.id ? (
+                  <button
+                    onClick={() => {
+                      setInviteOpenWorkspaceId(ws.id);
+                      setInviteEmail("");
+                      setInviteMessage(null);
+                    }}
+                    className="w-full bg-muted py-2 rounded-md text-sm hover:bg-muted/80"
+                  >
+                    Invite User
+                  </button>
+                ) : (
+                  // Invite input for this workspace
+                  <>
+                    <input
+                      type="email"
+                      placeholder="Enter user email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border rounded-md"
+                    />
+
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => handleInvite(ws.id)}
+                        disabled={inviteLoading}
+                        className="flex-1 bg-primary text-primary-foreground py-2 rounded-md text-sm hover:bg-primary/90 disabled:opacity-60"
+                      >
+                        {inviteLoading ? "Inviting..." : "Send Invite"}
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setInviteOpenWorkspaceId(null);
+                          setInviteEmail("");
+                          setInviteMessage(null);
+                        }}
+                        className="px-3 py-2 rounded-md border text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+
+                    {inviteMessage && (
+                      <p className="text-xs mt-2 text-muted-foreground">
+                        {inviteMessage}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           ))}
         </div>
