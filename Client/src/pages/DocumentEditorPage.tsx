@@ -1,3 +1,4 @@
+// src/pages/DocumentEditorPage.tsx
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -25,7 +26,7 @@ import Heading from "@tiptap/extension-heading";
 import Link from "@tiptap/extension-link";
 import { useDocumentStore } from "../store/document.store";
 import { useWorkspaces } from "../store/workspace.store";
-import { io, Socket } from "socket.io-client"; // <-- ADDED
+import { useDocumentSocket } from "../hooks/useDocumentSocket";
 
 const DocumentEditorPage: React.FC = () => {
   const { workspaceId, documentId } = useParams<{
@@ -50,8 +51,7 @@ const DocumentEditorPage: React.FC = () => {
   const [wordCount, setWordCount] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
 
-  const socketRef = useRef<Socket | null>(null); // <-- ADDED
-  const isRemoteUpdate = useRef(false); // <-- ADDED
+  const isRemoteUpdate = useRef(false);
 
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const canEdit =
@@ -80,15 +80,13 @@ const DocumentEditorPage: React.FC = () => {
       },
     },
     onUpdate: ({ editor }) => {
-      // ------------------- REAL-TIME EMIT -------------------
-      if (!isRemoteUpdate.current && socketRef.current) {
-        socketRef.current.emit("contentChange", {
-          workspaceId,
-          documentId,
-          content: editor.getHTML(),
-        });
+      // Only emit when the update was caused by local user (avoid echo)
+      if (!isRemoteUpdate.current) {
+        // send to socket (throttled inside hook)
+        sendDocumentUpdate(editor.getHTML());
+        // send cursor as well (lightweight)
+        sendCursorUpdate(editor.state.selection.from);
       }
-      // ------------------------------------------------------
 
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -114,30 +112,26 @@ const DocumentEditorPage: React.FC = () => {
     },
   });
 
-  // ------------------- REAL-TIME SOCKET EFFECT -------------------
-  useEffect(() => {
-    if (!workspaceId || !documentId || !editor) return;
-
-    const socket = io("http://localhost:3000", { transports: ["websocket"] });
-    socketRef.current = socket;
-
-    socket.emit("joinDocument", { workspaceId, documentId });
-
-    socket.on("contentChange", (data) => {
-      if (!editor || editor.isDestroyed) return;
-      if (!data?.content) return;
-
-      isRemoteUpdate.current = true;
-      editor.commands.setContent(data.content);
-      isRemoteUpdate.current = false;
+  // Use our hook: get functions and presence
+  const { sendDocumentUpdate, sendCursorUpdate, onlineUsers, safeDisconnect } =
+    useDocumentSocket({
+      workspaceId,
+      documentId,
+      onRemoteContent: ({ content }) => {
+        if (!editor) return;
+        isRemoteUpdate.current = true;
+        try {
+          if (content !== editor.getHTML()) {
+            editor.commands.setContent(content);
+          }
+        } finally {
+          isRemoteUpdate.current = false;
+        }
+      },
+      onRemoteCursor: () => {
+        // For now no cursor UI; later you can draw decorations
+      },
     });
-
-    return () => {
-      socket.emit("leaveDocument", { workspaceId, documentId });
-      socket.disconnect();
-    };
-  }, [workspaceId, documentId, editor]);
-  // -----------------------------------------------------------------
 
   useEffect(() => {
     if (workspaceId && documentId) {
@@ -153,6 +147,16 @@ const DocumentEditorPage: React.FC = () => {
       }
     }
   }, [document, editor]);
+
+  // disconnect socket on unmount to be explicit (and clear presence)
+  useEffect(() => {
+    return () => {
+      safeDisconnect();
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      editor?.destroy();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSave = useCallback(async () => {
     if (
@@ -175,13 +179,6 @@ const DocumentEditorPage: React.FC = () => {
       setIsSaving(false);
     }
   }, [workspaceId, documentId, title, editor, update]);
-
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      editor?.destroy();
-    };
-  }, [editor]);
 
   const handleDelete = async () => {
     if (!confirm("Delete this document? This cannot be undone.")) return;
@@ -286,6 +283,9 @@ const DocumentEditorPage: React.FC = () => {
                   <span className="text-emerald-500">Saved</span>
                 )}
               </span>
+              <span>•</span>
+              {/* Presence: display count and simple list */}
+              <span>{onlineUsers.length} online</span>
             </div>
           </div>
         </div>
@@ -323,6 +323,24 @@ const DocumentEditorPage: React.FC = () => {
             </>
           )}
         </div>
+      </div>
+
+      {/* Simple presence list UI (list of userIds) */}
+      <div className="flex gap-2 items-center px-4">
+        {onlineUsers.slice(0, 6).map((uid) => (
+          <div
+            key={uid}
+            className="px-2 py-1 text-xs bg-primary/10 rounded-md text-primary font-medium"
+            title={uid}
+          >
+            {uid}
+          </div>
+        ))}
+        {onlineUsers.length > 6 && (
+          <div className="px-2 py-1 text-xs bg-muted/10 rounded-md text-muted-foreground">
+            +{onlineUsers.length - 6} more
+          </div>
+        )}
       </div>
 
       {/* Editor Container */}
