@@ -3,25 +3,23 @@ import {
   type Workspace,
   type WorkspaceMember,
   type WorkspaceRole,
-  type WorkspaceWithMembers,
   type CreateWorkspaceDto,
   workspaceApi,
 } from "../api/workspace.api";
-
-import { useAuthStore } from "./auth.store";
 
 export interface WorkspaceWithRole extends Workspace {
   currentUserRole: WorkspaceRole;
 }
 
 interface WorkspaceState {
-  workspaces: WorkspaceWithRole[]; // list
+  workspaces: WorkspaceWithRole[];
   currentWorkspace:
     | (WorkspaceWithRole & { members?: WorkspaceMember[] })
     | null;
   isLoading: boolean;
   error: string | null;
 
+  // Actions
   fetchWorkspaces: () => Promise<void>;
   fetchWorkspace: (id: string) => Promise<void>;
   createWorkspace: (
@@ -33,51 +31,26 @@ interface WorkspaceState {
   ) => Promise<WorkspaceWithRole | null>;
   deleteWorkspace: (id: string) => Promise<void>;
   leaveWorkspace: (id: string) => Promise<void>;
-  inviteUser: (workspaceId: string, email: string) => Promise<void>;
+  inviteUser: (
+    workspaceId: string,
+    email: string,
+    role?: "Editor" | "Viewer"
+  ) => Promise<void>;
+  updateMemberRole: (
+    workspaceId: string,
+    memberId: string,
+    role: "Editor" | "Viewer"
+  ) => Promise<void>;
+  removeMember: (workspaceId: string, memberId: string) => Promise<void>;
+  getWorkspaceMembers: (workspaceId: string) => Promise<WorkspaceMember[]>;
+  getWorkspacePermission: (
+    workspaceId: string
+  ) => Promise<WorkspaceRole | null>;
 
   reset: () => void;
 }
 
-// Map list membership -> WorkspaceWithRole
-const membershipToWorkspaceWithRole = (
-  membership: WorkspaceMember
-): WorkspaceWithRole => {
-  const ws = membership.workspace;
-  return {
-    id: ws.id,
-    name: ws.name,
-    ownerId: ws.ownerId,
-    createdAt: ws.createdAt,
-    updatedAt: ws.updatedAt,
-    currentUserRole: membership.role,
-  };
-};
-
-// Map single workspace (with members) -> WorkspaceWithRole (+members)
-const workspaceWithMembersToWorkspaceWithRole = (
-  workspace: WorkspaceWithMembers,
-  currentUserId?: string
-): WorkspaceWithRole & { members: WorkspaceMember[] } => {
-  let role: WorkspaceRole = "Viewer";
-  if (currentUserId && workspace.members) {
-    const m = workspace.members.find((m) => m.userId === currentUserId);
-    if (m) {
-      role = m.role;
-    }
-  }
-
-  return {
-    id: workspace.id,
-    name: workspace.name,
-    ownerId: workspace.ownerId,
-    createdAt: workspace.createdAt,
-    updatedAt: workspace.updatedAt,
-    currentUserRole: role,
-    members: workspace.members,
-  };
-};
-
-export const useWorkspaceStore = create<WorkspaceState>((set) => ({
+export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   workspaces: [],
   currentWorkspace: null,
   isLoading: false,
@@ -86,9 +59,15 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   fetchWorkspaces: async () => {
     set({ isLoading: true, error: null });
     try {
-      const memberships = await workspaceApi.getUserWorkspaces(); // WorkspaceMember[]
-      const data = memberships.map(membershipToWorkspaceWithRole);
-      set({ workspaces: data, isLoading: false });
+      const workspaces = await workspaceApi.getUserWorkspaces();
+
+      // Transform to WorkspaceWithRole
+      const workspacesWithRole: WorkspaceWithRole[] = workspaces.map((ws) => ({
+        ...ws,
+        currentUserRole: ws.currentUserRole || "Viewer", // Default to Viewer if not provided
+      }));
+
+      set({ workspaces: workspacesWithRole, isLoading: false });
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to load workspaces";
@@ -99,10 +78,20 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   fetchWorkspace: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      const raw = await workspaceApi.getWorkspaceById(id); // WorkspaceWithMembers
-      const currentUser = useAuthStore.getState().user;
-      const ws = workspaceWithMembersToWorkspaceWithRole(raw, currentUser?.id);
-      set({ currentWorkspace: ws, isLoading: false });
+      const workspaceWithMembers = await workspaceApi.getWorkspaceById(id);
+
+      const workspaceWithRole: WorkspaceWithRole = {
+        ...workspaceWithMembers,
+        currentUserRole: workspaceWithMembers.currentUserRole || "Viewer",
+      };
+
+      set({
+        currentWorkspace: {
+          ...workspaceWithRole,
+          members: workspaceWithMembers.members,
+        },
+        isLoading: false,
+      });
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to load workspace";
@@ -113,19 +102,19 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   createWorkspace: async (dto: CreateWorkspaceDto) => {
     set({ isLoading: true, error: null });
     try {
-      const created = await workspaceApi.createWorkspace(dto); // WorkspaceWithMembers
-      const currentUser = useAuthStore.getState().user;
-      const ws = workspaceWithMembersToWorkspaceWithRole(
-        created,
-        currentUser?.id
-      );
+      const created = await workspaceApi.createWorkspace(dto);
+
+      const workspaceWithRole: WorkspaceWithRole = {
+        ...created,
+        currentUserRole: created.currentUserRole || "Owner", // New workspace is always Owner
+      };
 
       set((state) => ({
-        workspaces: [...state.workspaces, ws],
+        workspaces: [...state.workspaces, workspaceWithRole],
         isLoading: false,
       }));
 
-      return ws;
+      return workspaceWithRole;
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to create workspace";
@@ -137,21 +126,31 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   updateWorkspaceName: async (id: string, name: string) => {
     set({ isLoading: true, error: null });
     try {
-      const updated = await workspaceApi.updateWorkspaceName(id, name); // WorkspaceWithMembers
-      const currentUser = useAuthStore.getState().user;
-      const ws = workspaceWithMembersToWorkspaceWithRole(
-        updated,
-        currentUser?.id
-      );
+      const updated = await workspaceApi.updateWorkspaceName(id, name);
+
+      // Get current role from existing workspace
+      const existingWorkspace = get().workspaces.find((w) => w.id === id);
+
+      const workspaceWithRole: WorkspaceWithRole = {
+        ...updated,
+        currentUserRole: existingWorkspace?.currentUserRole || "Viewer",
+      };
 
       set((state) => ({
-        workspaces: state.workspaces.map((w) => (w.id === id ? ws : w)),
+        workspaces: state.workspaces.map((w) =>
+          w.id === id ? workspaceWithRole : w
+        ),
         currentWorkspace:
-          state.currentWorkspace?.id === id ? ws : state.currentWorkspace,
+          state.currentWorkspace?.id === id
+            ? {
+                ...state.currentWorkspace,
+                ...workspaceWithRole,
+              }
+            : state.currentWorkspace,
         isLoading: false,
       }));
 
-      return ws;
+      return workspaceWithRole;
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to update workspace";
@@ -194,15 +193,96 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     }
   },
 
-  inviteUser: async (workspaceId: string, email: string) => {
+  inviteUser: async (
+    workspaceId: string,
+    email: string,
+    role?: "Editor" | "Viewer"
+  ) => {
     set({ isLoading: true, error: null });
     try {
-      await workspaceApi.inviteUser(workspaceId, email);
+      await workspaceApi.inviteUser(workspaceId, email, role);
       set({ isLoading: false });
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to invite user";
       set({ error: message, isLoading: false });
+      throw err;
+    }
+  },
+
+  updateMemberRole: async (
+    workspaceId: string,
+    memberId: string,
+    role: "Editor" | "Viewer"
+  ) => {
+    set({ isLoading: true, error: null });
+    try {
+      await workspaceApi.updateMemberRole(workspaceId, memberId, role);
+      set({ isLoading: false });
+
+      // Update local state if needed
+      const { currentWorkspace } = get();
+      if (currentWorkspace?.id === workspaceId && currentWorkspace.members) {
+        const updatedMembers = currentWorkspace.members.map((member) =>
+          member.userId === memberId ? { ...member, role } : member
+        );
+        set({
+          currentWorkspace: { ...currentWorkspace, members: updatedMembers },
+        });
+      }
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update member role";
+      set({ error: message, isLoading: false });
+      throw err;
+    }
+  },
+
+  removeMember: async (workspaceId: string, memberId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await workspaceApi.removeMember(workspaceId, memberId);
+      set({ isLoading: false });
+
+      // Update local state
+      const { currentWorkspace } = get();
+      if (currentWorkspace?.id === workspaceId && currentWorkspace.members) {
+        const updatedMembers = currentWorkspace.members.filter(
+          (member) => member.userId !== memberId
+        );
+        set({
+          currentWorkspace: { ...currentWorkspace, members: updatedMembers },
+        });
+      }
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to remove member";
+      set({ error: message, isLoading: false });
+      throw err;
+    }
+  },
+
+  getWorkspaceMembers: async (workspaceId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const members = await workspaceApi.getWorkspaceMembers(workspaceId);
+      set({ isLoading: false });
+      return members;
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch members";
+      set({ error: message, isLoading: false });
+      throw err;
+    }
+  },
+
+  getWorkspacePermission: async (workspaceId: string) => {
+    try {
+      const { role } = await workspaceApi.getWorkspacePermission(workspaceId);
+      return role;
+    } catch (err) {
+      console.error("Failed to get permission:", err);
+      return null;
     }
   },
 
@@ -215,23 +295,32 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     }),
 }));
 
+// Selectors
 export const useWorkspaces = () => useWorkspaceStore((s) => s.workspaces);
 export const useWorkspaceCurrent = () =>
   useWorkspaceStore((s) => s.currentWorkspace);
 export const useWorkspaceLoading = () => useWorkspaceStore((s) => s.isLoading);
 export const useWorkspaceError = () => useWorkspaceStore((s) => s.error);
+export const useCanInvite = (workspaceId: string) =>
+  useWorkspaceStore(
+    (s) =>
+      s.workspaces.find((w) => w.id === workspaceId)?.currentUserRole ===
+      "Owner"
+  );
 
+// Actions
 export const useFetchWorkspaces = () =>
   useWorkspaceStore((s) => s.fetchWorkspaces);
 export const useFetchWorkspace = () =>
   useWorkspaceStore((s) => s.fetchWorkspace);
 export const useCreateWorkspace = () =>
   useWorkspaceStore((s) => s.createWorkspace);
-export const useUpdateWorkspaceName = () =>
-  useWorkspaceStore((s) => s.updateWorkspaceName);
-export const useDeleteWorkspace = () =>
-  useWorkspaceStore((s) => s.deleteWorkspace);
-export const useLeaveWorkspace = () =>
-  useWorkspaceStore((s) => s.leaveWorkspace);
 export const useInviteUser = () => useWorkspaceStore((s) => s.inviteUser);
+export const useUpdateMemberRole = () =>
+  useWorkspaceStore((s) => s.updateMemberRole);
+export const useRemoveMember = () => useWorkspaceStore((s) => s.removeMember);
+export const useGetWorkspaceMembers = () =>
+  useWorkspaceStore((s) => s.getWorkspaceMembers);
+export const useGetWorkspacePermission = () =>
+  useWorkspaceStore((s) => s.getWorkspacePermission);
 export const useResetWorkspaces = () => useWorkspaceStore((s) => s.reset);

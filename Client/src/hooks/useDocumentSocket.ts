@@ -1,152 +1,263 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import type {
-  ContentChangePayload,
-  CursorChangePayload,
-  PresencePayload,
-} from "../types/realtime";
-import { createSocket, disconnectSocket, getSocket } from "../lib/socket";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { io, Socket } from "socket.io-client";
 
-export function useDocumentSocket(options: {
-  workspaceId?: string | null;
-  documentId?: string | undefined;
-  onRemoteContent: (payload: ContentChangePayload) => void;
-  onRemoteCursor?: (payload: CursorChangePayload) => void;
-}) {
-  const { workspaceId, documentId, onRemoteContent, onRemoteCursor } = options;
+interface UseDocumentSocketProps {
+  workspaceId?: string;
+  documentId?: string;
+  onContentChange?: (data: { content: string; userId: string }) => void;
+  onCursorChange?: (data: { position: number; userId: string }) => void;
+  onUserJoined?: (data: { userId: string; onlineUsers: string[] }) => void;
+  onUserLeft?: (data: { userId: string; onlineUsers: string[] }) => void;
+}
 
-  //maintaing a list of online user....
+export const useDocumentSocket = ({
+  workspaceId,
+  documentId,
+  onContentChange,
+  onCursorChange,
+  onUserJoined,
+  onUserLeft,
+}: UseDocumentSocketProps = {}) => {
+  const socketRef = useRef<Socket | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const socketRef = useRef<any>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
-  // throttle state  to 200ms....
-  const lastSentAt = useRef<number>(0);
-  const pendingContent = useRef<string | null>(null);
-  const timerRef = useRef<number | null>(null);
-  const THROTTLE_MS = 200;
-
-  //connect and attach lstners..
+  // Initialize socket connection
   useEffect(() => {
-    if (!workspaceId || documentId) return;
+    const token = localStorage.getItem("token") || "";
+    if (!token) {
+      setConnectionError("No authentication token found");
+      return;
+    }
 
-    const WS_URL = import.meta.env.VITE_API_URL
-      ? (import.meta.env.VITE_API_URL as string).replace(/\/api.*$/, "")
-      : "http://localhost:3000";
+    // Create socket connection
+    const socket = io("http://localhost:3000", {
+      auth: { token },
+      query: {
+        workspaceId: workspaceId || "",
+        documentId: documentId || "",
+      },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
 
-    const socket = createSocket(WS_URL, { workspaceId, documentId });
     socketRef.current = socket;
 
-    //connection logs....
-
+    // Connection events
     socket.on("connect", () => {
-      console.log("[socket] connected", socket.id);
+      setIsConnected(true);
+      setConnectionError(null);
+      console.log("Socket connected:", socket.id);
     });
-    socket.on("connect_error", (err) => {
-      console.warn("[socket] connect_error", err?.message ?? err);
-    });
+
     socket.on("disconnect", (reason) => {
-      console.log("[socket] disconnected", reason);
+      setIsConnected(false);
+      console.log("Socket disconnected:", reason);
     });
 
-    socket.on("contentChange", (payload: ContentChangePayload) => {
-      if (!payload || typeof payload.content !== "string") return;
-      onRemoteContent(payload);
+    socket.on("connect_error", (error) => {
+      setIsConnected(false);
+      setConnectionError(error.message);
+      console.error("Socket connection error:", error);
     });
 
-    socket.on("cursorChange", (payload: CursorChangePayload) => {
-      if (!payload) return;
-      onRemoteCursor?.(payload);
+    socket.on("connected", (data) => {
+      console.log("Authenticated with server:", data);
     });
 
-    socket.on("userJoined", (payload: PresencePayload) => {
-      if (!payload?.userId) return;
-      setOnlineUsers((prev) => {
-        if (prev.includes(payload.userId)) return prev;
-        return [...prev, payload.userId];
-      });
+    // Presence events
+    socket.on("workspacePresence", (data: { onlineUsers: string[] }) => {
+      setOnlineUsers(data.onlineUsers);
+      console.log("Workspace presence:", data.onlineUsers);
     });
 
-    socket.on("userLeft", (payload: PresencePayload) => {
-      if (!payload?.userId) return;
-      setOnlineUsers((prev) => prev.filter((u) => u !== payload.userId));
+    socket.on("documentPresence", (data: { onlineUsers: string[] }) => {
+      setOnlineUsers(data.onlineUsers);
+      console.log("Document presence:", data.onlineUsers);
     });
 
+    socket.on(
+      "userJoinedWorkspace",
+      (data: { userId: string; onlineUsers: string[] }) => {
+        setOnlineUsers(data.onlineUsers);
+        onUserJoined?.(data);
+        console.log(`User ${data.userId} joined workspace`);
+      }
+    );
+
+    socket.on(
+      "userLeftWorkspace",
+      (data: { userId: string; onlineUsers: string[] }) => {
+        setOnlineUsers(data.onlineUsers);
+        onUserLeft?.(data);
+        console.log(`User ${data.userId} left workspace`);
+      }
+    );
+
+    socket.on(
+      "userJoinedDocument",
+      (data: { userId: string; onlineUsers: string[] }) => {
+        setOnlineUsers(data.onlineUsers);
+        onUserJoined?.(data);
+        console.log(`User ${data.userId} joined document`);
+      }
+    );
+
+    socket.on(
+      "userLeftDocument",
+      (data: { userId: string; onlineUsers: string[] }) => {
+        setOnlineUsers(data.onlineUsers);
+        onUserLeft?.(data);
+        console.log(`User ${data.userId} left document`);
+      }
+    );
+
+    // Collaboration events
+    socket.on("contentChange", (data: { content: string; userId: string }) => {
+      onContentChange?.(data);
+    });
+
+    socket.on("cursorChange", (data: { position: number; userId: string }) => {
+      onCursorChange?.(data);
+    });
+
+    socket.on("error", (data: { message: string }) => {
+      console.error("Socket error:", data.message);
+      setConnectionError(data.message);
+    });
+
+    // Heartbeat
+    const heartbeatInterval = setInterval(() => {
+      if (socket.connected) {
+        socket.emit("heartbeat");
+      }
+    }, 30000);
+
+    // Cleanup
     return () => {
-      // cleanup: stop listeners and disconnect if this was the only usage
-      socket.off("contentChange");
-      socket.off("cursorChange");
-      socket.off("userJoined");
-      socket.off("userLeft");
+      clearInterval(heartbeatInterval);
+      socket.disconnect();
     };
-  }, [workspaceId, documentId, onRemoteContent, onRemoteCursor]);
-
-  const safeDisconnect = useCallback(() => {
-    // remove all listeners and disconnect
-    const s = getSocket();
-    if (s) {
-      s.off("contentChange");
-      s.off("cursorChange");
-      s.off("userJoined");
-      s.off("userLeft");
-    }
-    disconnectSocket();
-    socketRef.current = null;
-    setOnlineUsers([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Throttled document update: coalesce updates and send at most once/200ms
+  // Join workspace when workspaceId changes
+  useEffect(() => {
+    if (socketRef.current?.connected && workspaceId) {
+      socketRef.current.emit("joinWorkspace", { workspaceId });
+    }
+  }, [workspaceId, isConnected]);
+
+  // Join document when documentId changes
+  useEffect(() => {
+    if (socketRef.current?.connected && documentId && workspaceId) {
+      socketRef.current.emit("joinDocument", { documentId, workspaceId });
+    }
+  }, [documentId, workspaceId, isConnected]);
+
+  // Send document update
   const sendDocumentUpdate = useCallback(
-    (newContent: string) => {
-      const s = getSocket();
-      if (!s) return;
-
-      const now = Date.now();
-      const since = now - (lastSentAt.current || 0);
-
-      if (since >= THROTTLE_MS) {
-        lastSentAt.current = now;
-        s.emit("documentUpdate", { documentId, newContent });
-        // clear pending
-        if (timerRef.current) {
-          window.clearTimeout(timerRef.current);
-          timerRef.current = null;
-        }
-        pendingContent.current = null;
-        return;
+    (content: string) => {
+      if (socketRef.current?.connected && documentId) {
+        socketRef.current.emit("documentUpdate", {
+          documentId,
+          newContent: content,
+        });
       }
-
-      // otherwise schedule latest content to be sent later
-      pendingContent.current = newContent;
-      if (timerRef.current) return;
-
-      const wait = THROTTLE_MS - since;
-      timerRef.current = window.setTimeout(() => {
-        const latest = pendingContent.current;
-        if (latest != null) {
-          const sock = getSocket();
-          sock?.emit("documentUpdate", { documentId, newContent: latest });
-          lastSentAt.current = Date.now();
-        }
-        pendingContent.current = null;
-        timerRef.current = null;
-      }, wait) as unknown as number;
     },
     [documentId]
   );
 
+  // Send cursor update
   const sendCursorUpdate = useCallback(
     (position: number) => {
-      const s = getSocket();
-      if (!s) return;
-      s.emit("cursorUpdate", { documentId, position });
+      if (socketRef.current?.connected && documentId) {
+        socketRef.current.emit("cursorUpdate", {
+          documentId,
+          position,
+        });
+      }
     },
     [documentId]
   );
 
+  // Join workspace explicitly
+  const joinWorkspace = useCallback((wsId: string) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit("joinWorkspace", { workspaceId: wsId });
+    }
+  }, []);
+
+  // Leave workspace
+  const leaveWorkspace = useCallback((wsId: string) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit("leaveWorkspace", { workspaceId: wsId });
+    }
+  }, []);
+
+  // Join document explicitly
+  const joinDocument = useCallback((docId: string, wsId: string) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit("joinDocument", {
+        documentId: docId,
+        workspaceId: wsId,
+      });
+    }
+  }, []);
+
+  // Leave document
+  const leaveDocument = useCallback((docId: string) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit("leaveDocument", { documentId: docId });
+    }
+  }, []);
+
+  // Request online users
+  const getOnlineUsers = useCallback(() => {
+    if (socketRef.current?.connected) {
+      if (workspaceId) {
+        socketRef.current.emit("getOnlineUsers", { workspaceId });
+      } else if (documentId) {
+        socketRef.current.emit("getOnlineUsers", { documentId });
+      }
+    }
+  }, [workspaceId, documentId]);
+
+  // Disconnect socket
+  const disconnect = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+  }, []);
+
+  // Reconnect
+  const reconnect = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.connect();
+    }
+  }, []);
+
   return {
+    // State
+    onlineUsers,
+    isConnected,
+    connectionError,
+
+    // Actions
     sendDocumentUpdate,
     sendCursorUpdate,
-    onlineUsers,
-    safeDisconnect,
+    joinWorkspace,
+    leaveWorkspace,
+    joinDocument,
+    leaveDocument,
+    getOnlineUsers,
+    disconnect,
+    reconnect,
+
+    // Socket instance
+    socket: socketRef.current,
   };
-}
+};

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,76 +7,71 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role{
+enum Role {
   Admin
   User
 }
-enum WorkspaceRole{
-  Owner //creator of the workspace..
-  Admin //can manage members, documnets..
-  Editor //can create/edit the docs..
-  Viewer //can only read docs..
+
+enum WorkspaceRole {
+  Owner
+  Editor
+  Viewer
 }
 
 model User {
-  id  String @id @default(uuid())
-  name String?
-  email String @unique
-  passwordhash String
-  role Role @default(User)
-
-  //relations..
-  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
-  workspacesMembers WorkspaceMember[]
-  documents Document[] @relation("UserDocuments")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-//workspace model..
-model Workspace{
-  id String @id @default(uuid())
-  name String
-
-  //relations..
-  ownerId String   //foreign key..
-  owner User @relation("WorkspaceOwner", fields: [ownerId], references: [id])
-  members WorkspaceMember[]
-  documents Document[] @relation("WorkspaceDocuments")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model WorkspaceMember{
-  id   String  @id @default(uuid())
-  role WorkspaceRole @default(Viewer)
-
-  //relations..
-  userId String
-  WorkspaceId String
-  user User @relation(fields: [userId], references: [id])
-  workspace Workspace @relation(fields: [WorkspaceId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, WorkspaceId])
-
+  id            String    @id @default(uuid())
+  name          String?
+  email         String    @unique
+  passwordhash  String
+  role          Role      @default(User)
   
+  // relations
+  ownedWorkspaces   Workspace[]         @relation("WorkspaceOwner")
+  workspacesMembers WorkspaceMember[]
+  documents         Document[]          @relation("UserDocuments")
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }
 
-//Document model... 
+model Workspace {
+  id          String            @id @default(uuid())
+  name        String
+  
+  // relations
+  ownerId     String
+  owner       User              @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members     WorkspaceMember[]
+  documents   Document[]        @relation("WorkspaceDocuments")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
 
-model Document{
-  id String @id @default(uuid())
-  title String
-  content String
-
-  //relations..
+model WorkspaceMember {
+  id          String        @id @default(uuid())
+  role        WorkspaceRole @default(Viewer)
+  
+  // relations
+  userId      String
   workspaceId String
-  workspace Workspace @relation("WorkspaceDocuments", fields: [workspaceId], references: [id])
-  createdById String
-  createdBy User @relation("UserDocuments", fields: [createdById], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  user        User          @relation(fields: [userId], references: [id])
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id])
+  invitedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  @@unique([userId, workspaceId])
+}
 
+model Document {
+  id          String    @id @default(uuid())
+  title       String
+  content     String
+  
+  // relations
+  workspaceId String
+  workspace   Workspace @relation("WorkspaceDocuments", fields: [workspaceId], references: [id])
+  createdById String
+  createdBy   User      @relation("UserDocuments", fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
