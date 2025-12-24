@@ -105,15 +105,23 @@ export class WorkspaceService {
     return memberships;
   }
 
+  async findUserByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
+  }
+
   // Inviting a new user to our workspace...
-  async inviteUserToWorkspace(workspaceId: string, inviteUserId: string) {
-    const invitedUserCacheKey = `user_workspaces:${inviteUserId}`;
+  async inviteUserToWorkspace(
+    workspaceId: string,
+    inviteUserId: string,
+    notify?: (userId: string, event: string, payload: any) => void, // optional notifier callback
+  ) {
+    const invitedUserCacheKey = `user_workspace:${inviteUserId}`;
     await this.cacheManager.del(invitedUserCacheKey);
     console.log(
       `[Cache Invalidation] Cleared workspace list for invited user ${inviteUserId}.`,
     );
 
-    //check workspace exits..
+    // Check if workspace exists
     const workspaceExists = await this.prisma.workspace.findUnique({
       where: { id: workspaceId },
     });
@@ -121,7 +129,7 @@ export class WorkspaceService {
       throw new NotFoundException('Workspace not found');
     }
 
-    //check user exists
+    // Check if user exists
     const userExists = await this.prisma.user.findUnique({
       where: { id: inviteUserId },
     });
@@ -129,7 +137,7 @@ export class WorkspaceService {
       throw new NotFoundException('Invited User not found');
     }
 
-    //check if user alredy a member of a workspace..
+    // Check if user is already a member
     const existingMembership = await this.prisma.workspaceMember.findFirst({
       where: {
         userId: inviteUserId,
@@ -142,8 +150,8 @@ export class WorkspaceService {
       );
     }
 
-    //if everything is fine means a fresh user..
-    return this.prisma.workspaceMember.create({
+    // Create membership
+    const newMembership = await this.prisma.workspaceMember.create({
       data: {
         workspace: { connect: { id: workspaceId } },
         user: { connect: { id: inviteUserId } },
@@ -159,7 +167,24 @@ export class WorkspaceService {
             updatedAt: true,
           },
         },
+        workspace: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
+
+    // Emit real-time notification (if callback provided)
+    if (notify) {
+      void notify(inviteUserId, 'workspaceInvite', {
+        workspaceId: workspaceId,
+        workspaceName: workspaceExists.name,
+        inviter: 'System', // you can pass actual inviter user here
+      });
+    }
+
+    return newMembership;
   }
 }

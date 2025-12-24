@@ -85,6 +85,6 @@ export const workspaceApi = {
     workspaceId: string,
     inviteEmail: string
   ): Promise<void> => {
-    await api.post(`/${workspaceId}/invite`, { inviteEmail });
+    await api.post(`/${workspaceId}/invite`, { invitedUserEmail: inviteEmail });
   },
 };

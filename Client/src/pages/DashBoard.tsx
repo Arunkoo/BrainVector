@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthUser } from "../store/auth.store";
 import {
@@ -7,6 +7,7 @@ import {
   useWorkspaceLoading,
   useFetchWorkspaces,
   useCreateWorkspace,
+  useInviteUser,
 } from "../store/workspace.store";
 import type { WorkspaceRole } from "../api/workspace.api";
 
@@ -22,22 +23,51 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const workspaces = useWorkspaces();
   const isLoading = useWorkspaceLoading();
-  // const error = useWorkspaceError();
   const fetchWorkspaces = useFetchWorkspaces();
   const createWorkspace = useCreateWorkspace();
-  // const inviteUser = useInviteUser();
+  const inviteUser = useInviteUser();
 
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [roleFilter, setRoleFilter] = useState<WorkspaceRole | "all">("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // invite modal state
+  const [inviteOpen, setInviteOpen] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+
   const ITEMS_PER_PAGE = 6;
 
   useEffect(() => {
     if (user?.id) {
-      fetchWorkspaces();
+      // fetch workspaces on mount and after user id changes
+      fetchWorkspaces().catch((err) =>
+        console.error("Failed to fetch workspaces:", err)
+      );
     }
   }, [user?.id, fetchWorkspaces]);
+
+  const handleSendInvite = async (workspaceId: string, email: string) => {
+    if (!email.trim()) return;
+
+    try {
+      // send invite
+      await inviteUser(workspaceId, email.trim());
+
+      // refetch workspaces to reflect new invite immediately
+      await fetchWorkspaces();
+
+      // reset modal
+      setInviteOpen(null);
+      setInviteEmail("");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error("Failed to send invite:", err);
+      alert(
+        err?.response?.data?.message || err.message || "Failed to send invite"
+      );
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +85,7 @@ const Dashboard: React.FC = () => {
     1,
     Math.ceil(filteredWorkspaces.length / ITEMS_PER_PAGE)
   );
+
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentItems = filteredWorkspaces.slice(
     startIndex,
@@ -99,6 +130,7 @@ const Dashboard: React.FC = () => {
           <p className="text-sm text-muted-foreground">Workspaces</p>
           <p className="text-2xl font-bold mt-1">{workspaces.length}</p>
         </div>
+
         <div className="rounded-lg border p-4">
           <p className="text-sm text-muted-foreground">Role</p>
           <div className="relative">
@@ -111,6 +143,7 @@ const Dashboard: React.FC = () => {
               </span>
               <ChevronDown className="h-4 w-4" />
             </button>
+
             {filterOpen && (
               <div className="absolute z-10 mt-1 w-full bg-card border rounded-lg shadow-lg">
                 {["all", "Owner", "Admin", "Editor", "Viewer"].map((role) => (
@@ -129,6 +162,7 @@ const Dashboard: React.FC = () => {
             )}
           </div>
         </div>
+
         <div className="rounded-lg border p-4">
           <p className="text-sm text-muted-foreground">Status</p>
           <p className="text-sm font-medium mt-1">
@@ -137,7 +171,7 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Workspaces Grid */}
+      {/* Workspaces */}
       {currentItems.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {currentItems.map((ws) => (
@@ -156,9 +190,24 @@ const Dashboard: React.FC = () => {
                   {ws.currentUserRole}
                 </span>
               </div>
+
               <p className="text-sm text-muted-foreground mt-2">
                 Created {new Date(ws.createdAt).toLocaleDateString()}
               </p>
+
+              {(ws.currentUserRole === "Owner" ||
+                ws.currentUserRole === "Admin") && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInviteOpen(ws.id);
+                  }}
+                  className="mt-3 inline-flex items-center gap-1 text-xs px-3 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20"
+                >
+                  <UserPlus className="h-3 w-3" />
+                  Invite
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -180,6 +229,41 @@ const Dashboard: React.FC = () => {
               {page}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Invite Modal */}
+      {inviteOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg p-6 w-full max-w-sm">
+            <h3 className="font-semibold mb-2">Invite user</h3>
+
+            <input
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="Email address"
+              className="w-full border rounded-md px-3 py-2 text-sm"
+            />
+
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => {
+                  setInviteOpen(null);
+                  setInviteEmail("");
+                }}
+                className="text-sm px-3 py-2 rounded-md hover:bg-muted"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => handleSendInvite(inviteOpen!, inviteEmail)}
+                className="text-sm px-3 py-2 rounded-md bg-primary text-primary-foreground"
+              >
+                Send Invite
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

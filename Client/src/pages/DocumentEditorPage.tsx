@@ -56,7 +56,8 @@ const DocumentEditorPage: React.FC = () => {
   const workspace = workspaces.find((w) => w.id === workspaceId);
   const canEdit =
     workspace?.currentUserRole === "Owner" ||
-    workspace?.currentUserRole === "Admin";
+    workspace?.currentUserRole === "Admin" ||
+    workspace?.currentUserRole === "Editor";
 
   const editor = useEditor({
     extensions: [

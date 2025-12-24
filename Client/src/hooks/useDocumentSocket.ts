@@ -27,7 +27,7 @@ export function useDocumentSocket(options: {
 
   //connect and attach lstners..
   useEffect(() => {
-    if (!workspaceId || documentId) return;
+    if (!workspaceId || !documentId) return;
 
     const WS_URL = import.meta.env.VITE_API_URL
       ? (import.meta.env.VITE_API_URL as string).replace(/\/api.*$/, "")

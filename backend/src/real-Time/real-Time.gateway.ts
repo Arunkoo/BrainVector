@@ -10,21 +10,21 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
-import { WsExceptionFilter } from 'src/common/filters/ws-exception.filter';
 import { DocumentService } from 'src/documents/document.service';
+import { WsExceptionFilter } from 'src/common/filters/ws-exception.filter';
 
-//interface for authenticated user in socket...
+// interface for authenticated user in socket
 interface JwtPayload {
   userId: string;
   role: string;
   iat?: number;
   exp?: number;
 }
+
 interface AuthenticatedSocket extends Socket {
   user?: JwtPayload;
 }
 
-//define the port
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -38,69 +38,70 @@ export class RealTimeGateWay
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(RealTimeGateWay.name);
 
-  //map to store which user is in which document room..
-  private userToDocumentMap = new Map<string, string>(); //socket id----> documentId;
-  private socketToUserMap = new Map<string, string>();
-  private documentToWorkspaceMap = new Map<string, string>();
+  private userToDocumentMap = new Map<string, string>(); // socketId -> documentId
+  private socketToUserMap = new Map<string, string>(); // socketId -> userId
+  private documentToWorkspaceMap = new Map<string, string>(); // documentId -> workspaceId
+  private onlineUsers = new Map<string, string>(); // userId -> socketId
+
   constructor(
     private authService: AuthService,
     private documentService: DocumentService,
   ) {}
 
-  //authentication check...
+  /** Handle connection with JWT authentication */
   async handleConnection(client: Socket) {
-    const jwtCookie = client.handshake.headers.cookie
-      ?.split(';')
-      .find((cookie) => cookie.startsWith('jwt='))
-      ?.split('=')[1];
-
-    if (!jwtCookie) {
-      this.logger.warn(
-        `Connection denied: No JWT cookie provided for socket ${client.id}`,
-      );
-      return client.disconnect(true);
-    }
-
     try {
-      const payload = this.authService.verifyJwt(jwtCookie);
-      (client as AuthenticatedSocket).user = payload; //attaaching the user data to the socket object...
-      const documentId = client.handshake.query.documentId as string;
-      const workspaceId = client.handshake.query.workspaceId as string;
+      const jwtCookie = client.handshake.headers.cookie
+        ?.split(';')
+        .find((cookie) => cookie.startsWith('jwt='))
+        ?.split('=')[1];
 
-      if (!documentId || !workspaceId) {
-        this.logger.warn(
-          `Connection denied: Missing documentId or workspaceId in query for socket ${client.id}`,
-        );
+      if (!jwtCookie) {
+        this.logger.warn(`Connection denied: No JWT cookie for ${client.id}`);
         return client.disconnect(true);
       }
 
-      //checking if a user is a member of the document's workspace...
-      await this.documentService.findOne(
-        payload.userId,
-        workspaceId,
-        documentId,
-      );
+      const payload = this.authService.verifyJwt(jwtCookie);
+      (client as AuthenticatedSocket).user = payload;
 
-      //join room:  if authorized, add the socket to document room..
-      await client.join(documentId);
-      this.userToDocumentMap.set(client.id, documentId);
-      this.socketToUserMap.set(client.id, payload.userId);
-      this.documentToWorkspaceMap.set(documentId, workspaceId);
-      this.logger.log(`User ${payload.userId} connect to room: ${documentId}`);
+      // Join personal room for workspace notifications
+      await client.join(payload.userId);
+      this.onlineUsers.set(payload.userId, client.id);
 
-      client.to(documentId).emit('userJoined', {
-        userId: payload.userId,
-        message: `${payload.userId} joined the document.`,
-      });
+      const documentId = client.handshake.query.documentId as string;
+      const workspaceId = client.handshake.query.workspaceId as string;
+
+      if (documentId && workspaceId) {
+        // Verify membership
+        await this.documentService.findOne(
+          payload.userId,
+          workspaceId,
+          documentId,
+        );
+
+        await client.join(documentId);
+        this.userToDocumentMap.set(client.id, documentId);
+        this.socketToUserMap.set(client.id, payload.userId);
+        this.documentToWorkspaceMap.set(documentId, workspaceId);
+
+        client.to(documentId).emit('userJoined', {
+          userId: payload.userId,
+          message: `${payload.userId} joined the document.`,
+        });
+
+        this.logger.log(
+          `User ${payload.userId} connected to document room: ${documentId}`,
+        );
+      } else {
+        this.logger.log(`User ${payload.userId} connected (dashboard only)`);
+      }
     } catch (error) {
-      this.logger.error(
-        `Authentication/Authorization error for socket ${client.id}`,
-        error,
-      );
+      this.logger.error(`Auth error for socket ${client.id}`, error);
       client.disconnect(true);
     }
   }
 
+  /** Handle disconnect */
   async handleDisconnect(client: Socket) {
     const documentId = this.userToDocumentMap.get(client.id);
     const user = (client as AuthenticatedSocket).user;
@@ -113,58 +114,61 @@ export class RealTimeGateWay
       await client.leave(documentId);
       this.userToDocumentMap.delete(client.id);
       this.socketToUserMap.delete(client.id);
+      this.documentToWorkspaceMap.delete(documentId);
       this.logger.log(
-        `User ${user?.userId || client.id} disconneted from room: ${documentId}`,
+        `User ${user?.userId || client.id} disconnected from document ${documentId}`,
       );
+    }
+
+    if (user?.userId) {
+      this.onlineUsers.delete(user.userId);
+      await client.leave(user.userId);
     }
   }
 
-  //real Time collaboration logic....
+  /** Notify a specific user about workspace updates */
+  notifyUserWorkspaceUpdate(userId: string) {
+    this.server.to(userId).emit('workspaceUpdated', {
+      message: 'Your workspace list has been updated.',
+      timestamp: new Date().toISOString(),
+    });
+  }
 
-  //main logic to handle the text update...  amybe a cursor upfdate also...
+  /** Handle document content updates */
   @SubscribeMessage('documentUpdate')
   async handleDocumentUpdate(
     @ConnectedSocket() client: Socket,
-    @MessageBody()
-    payload: { documentId: string; newContent: string },
+    @MessageBody() payload: { documentId: string; newContent: string },
   ) {
     const { documentId, newContent } = payload;
     const user = (client as AuthenticatedSocket).user;
 
     if (!user || this.userToDocumentMap.get(client.id) !== documentId) {
-      return this.logger.warn(
-        `Unauthorized update attempt by socket ${client.id}`,
-      );
+      return this.logger.warn(`Unauthorized update by socket ${client.id}`);
     }
 
     const workspaceId = this.documentToWorkspaceMap.get(documentId);
-    if (!workspaceId) {
-      return this.logger.warn(
-        `Workspace not found for the user with ${documentId}`,
-      );
-    }
+    if (!workspaceId) return;
 
-    //Broadcast the changes to all other connected client in the rooms...
+    // Broadcast changes to other users in room
     client.to(documentId).emit('contentChange', {
       userId: user.userId,
       content: newContent,
       timestamp: new Date().toISOString(),
     });
 
-    //save the changes in docs..
+    // Save changes in DB
     await this.documentService.UpdateDocument(
       user.userId,
       workspaceId,
       documentId,
-      {
-        content: newContent,
-      },
+      { content: newContent },
     );
+
     this.logger.verbose(`User ${user.userId} updated document ${documentId}`);
-    return { status: 'success', message: 'Update broadcasted.' };
   }
 
-  //handle cursor updates....
+  /** Handle cursor movements */
   @SubscribeMessage('cursorUpdate')
   handleCursorUpdate(
     @ConnectedSocket() client: Socket,
@@ -173,8 +177,7 @@ export class RealTimeGateWay
     const user = (client as AuthenticatedSocket).user;
 
     if (!user || this.userToDocumentMap.get(client.id) !== payload.documentId) {
-      this.logger.warn(`Unauthorized update attempt by client ${client.id}`);
-      return;
+      return this.logger.warn(`Unauthorized cursor update by ${client.id}`);
     }
 
     client.to(payload.documentId).emit('cursorChange', {
@@ -186,5 +189,10 @@ export class RealTimeGateWay
     this.logger.verbose(
       `User ${user.userId} moved cursor in document ${payload.documentId}`,
     );
+  }
+
+  /** Check if a user is online */
+  isUserOnline(userId: string) {
+    return this.onlineUsers.has(userId);
   }
 }

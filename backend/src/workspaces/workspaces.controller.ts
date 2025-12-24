@@ -58,14 +58,21 @@ export class WorkspaceController {
     @Param('workspaceId') workspaceId: string,
     @Body() dto: InviteUserDto,
   ) {
-    console.log('Invited user details..', dto.invitedUserId);
-    const invitedUserId = dto.invitedUserId;
     try {
-      await this.workspaceService.inviteUserToWorkspace(
-        workspaceId,
-        invitedUserId,
+      // Resolve email -> userId
+      const user = await this.workspaceService.findUserByEmail(
+        dto.invitedUserEmail,
       );
-      return { id: invitedUserId };
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+
+      const newMembership = await this.workspaceService.inviteUserToWorkspace(
+        workspaceId,
+        user.id,
+      );
+
+      return { id: newMembership.user.id };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
