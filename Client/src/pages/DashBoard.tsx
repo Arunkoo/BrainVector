@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ChevronDown, UserPlus, RefreshCcw, Pointer } from "lucide-react";
+import { ChevronDown, UserPlus, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthChecking, useAuthUser } from "../store/auth.store";
 import {
