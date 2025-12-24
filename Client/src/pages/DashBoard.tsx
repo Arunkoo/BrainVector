@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { ChevronDown, UserPlus } from "lucide-react";
+import { ChevronDown, UserPlus, RefreshCcw, Pointer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuthUser } from "../store/auth.store";
+import { useAuthChecking, useAuthUser } from "../store/auth.store";
 import {
   useWorkspaces,
   useWorkspaceLoading,
@@ -10,7 +10,6 @@ import {
   useInviteUser,
 } from "../store/workspace.store";
 import type { WorkspaceRole } from "../api/workspace.api";
-import type { WorkspaceWithRole } from "../store/workspace.store";
 
 const ROLE_COLORS: Record<WorkspaceRole, string> = {
   Owner: "bg-gradient-to-r from-purple-500 to-pink-500",
@@ -40,34 +39,25 @@ const Dashboard: React.FC = () => {
   const ITEMS_PER_PAGE = 6;
 
   // ✅ Fetch workspace metadata once
-  useEffect(() => {
-    if (user?.id && workspaces.length === 0) {
-      fetchWorkspaces().catch((err) =>
-        console.error("Failed to fetch workspaces:", err)
-      );
-    }
-  }, [user?.id, fetchWorkspaces, workspaces.length]);
+  const authChecking = useAuthChecking();
 
+  useEffect(() => {
+    if (!authChecking && user) {
+      fetchWorkspaces();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authChecking, user?.id, fetchWorkspaces]);
   const handleSendInvite = async (workspaceId: string, email: string) => {
     if (!email.trim()) return;
 
     try {
       await inviteUser(workspaceId, email.trim());
-
-      // ✅ Optional: update state locally
-      const wsIndex = workspaces.findIndex((w) => w.id === workspaceId);
-      if (wsIndex !== -1) {
-        const updated: WorkspaceWithRole = {
-          ...workspaces[wsIndex],
-        };
-        workspaces[wsIndex] = updated;
-      }
-
+      await fetchWorkspaces();
       setInviteOpen(null);
       setInviteEmail("");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      console.error("Failed to send invite:", err);
+      console.log("Failed to send invite:", err);
       alert(
         err?.response?.data?.message || err.message || "Failed to send invite"
       );
@@ -176,7 +166,11 @@ const Dashboard: React.FC = () => {
           </p>
         </div>
       </div>
-
+      <RefreshCcw
+        onClick={fetchWorkspaces}
+        size={16}
+        className=" cursor-pointer"
+      />
       {/* Workspaces */}
       {currentItems.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

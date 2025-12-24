@@ -3,6 +3,7 @@ import type { StateCreator } from "zustand";
 import type { User } from "../types";
 import { authApi } from "../api/auth.api";
 import axios, { AxiosError } from "axios";
+import { useWorkspaceStore } from "./workspace.store";
 
 /* ---------------------- Types ---------------------- */
 
@@ -88,6 +89,7 @@ const logoutFn = async (set: StoreSet) => {
     await authApi.logout();
   } finally {
     set({ user: null, isLoading: false });
+    useWorkspaceStore.getState().reset();
   }
 };
 
