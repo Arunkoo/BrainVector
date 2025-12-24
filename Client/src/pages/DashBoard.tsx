@@ -10,6 +10,7 @@ import {
   useInviteUser,
 } from "../store/workspace.store";
 import type { WorkspaceRole } from "../api/workspace.api";
+import type { WorkspaceWithRole } from "../store/workspace.store";
 
 const ROLE_COLORS: Record<WorkspaceRole, string> = {
   Owner: "bg-gradient-to-r from-purple-500 to-pink-500",
@@ -38,26 +39,30 @@ const Dashboard: React.FC = () => {
 
   const ITEMS_PER_PAGE = 6;
 
+  // ✅ Fetch workspace metadata once
   useEffect(() => {
-    if (user?.id) {
-      // fetch workspaces on mount and after user id changes
+    if (user?.id && workspaces.length === 0) {
       fetchWorkspaces().catch((err) =>
         console.error("Failed to fetch workspaces:", err)
       );
     }
-  }, [user?.id, fetchWorkspaces]);
+  }, [user?.id, fetchWorkspaces, workspaces.length]);
 
   const handleSendInvite = async (workspaceId: string, email: string) => {
     if (!email.trim()) return;
 
     try {
-      // send invite
       await inviteUser(workspaceId, email.trim());
 
-      // refetch workspaces to reflect new invite immediately
-      await fetchWorkspaces();
+      // ✅ Optional: update state locally
+      const wsIndex = workspaces.findIndex((w) => w.id === workspaceId);
+      if (wsIndex !== -1) {
+        const updated: WorkspaceWithRole = {
+          ...workspaces[wsIndex],
+        };
+        workspaces[wsIndex] = updated;
+      }
 
-      // reset modal
       setInviteOpen(null);
       setInviteEmail("");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,8 +77,9 @@ const Dashboard: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWorkspaceName.trim()) return;
-    await createWorkspace({ name: newWorkspaceName.trim() });
-    setNewWorkspaceName("");
+
+    const ws = await createWorkspace({ name: newWorkspaceName.trim() });
+    if (ws) setNewWorkspaceName("");
   };
 
   const filteredWorkspaces =
