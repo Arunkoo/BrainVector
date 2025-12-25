@@ -6,7 +6,7 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 import request, { SuperAgentTest } from 'supertest';
 import { CreateWorkspaceDto } from '../../src/workspaces/dto/create-workspace.dto';
 import { WorkspaceRole } from '@prisma/client';
-import { InviteUserDto } from 'src/workspaces/dto/invite-user.dto';
+import { type InviteUserDto } from 'src/workspaces/dto/invite-user.dto';
 import cookieParser from 'cookie-parser';
 import { createTestModule } from '../setUp';
 
@@ -153,10 +153,10 @@ describe('WorkspaceController (E2E with Cookie Auth)', () => {
       expect(body.ownerId).toBe(arunUserId);
       const member = await prisma.workspaceMember.findUnique({
         where: {
-          userId_WorkspaceId: {
+          userId_workspaceId: {
             userId: arunUserId,
 
-            WorkspaceId: targetWorkspaceId,
+            workspaceId: targetWorkspaceId,
           },
         },
       });
@@ -215,7 +215,10 @@ describe('WorkspaceController (E2E with Cookie Auth)', () => {
   // ---------------- Invite User ----------------
   describe('POST /api/workspace/:workspaceId/invite', () => {
     it('should successfully invite Aman to the workspace with default role "Viewer"', async () => {
-      const inviteData: InviteUserDto = { invitedUserId: amanUserId };
+      const inviteData: InviteUserDto = {
+        invitedUserEmail: USER2_DATA.email,
+        role: WorkspaceRole.Viewer,
+      };
 
       console.log(
         'DEBUG: Attempting to invite Aman (ID:',
@@ -246,9 +249,9 @@ describe('WorkspaceController (E2E with Cookie Auth)', () => {
 
       const member = await prisma.workspaceMember.findUnique({
         where: {
-          userId_WorkspaceId: {
+          userId_workspaceId: {
             userId: amanUserId,
-            WorkspaceId: targetWorkspaceId,
+            workspaceId: targetWorkspaceId,
           },
         },
       });
@@ -258,7 +261,10 @@ describe('WorkspaceController (E2E with Cookie Auth)', () => {
     });
 
     it('should return 409 (Conflict) if User is already a member', async () => {
-      const inviteData: InviteUserDto = { invitedUserId: amanUserId };
+      const inviteData: InviteUserDto = {
+        invitedUserEmail: USER2_DATA.email,
+        role: WorkspaceRole.Viewer,
+      };
 
       await arunAgent
         .post(`${BASE_URL}/${targetWorkspaceId}/invite`)
