@@ -24,7 +24,11 @@ interface WorkspaceState {
   createWorkspace: (
     dto: CreateWorkspaceDto
   ) => Promise<WorkspaceWithRole | null>;
-  inviteUser: (workspaceId: string, email: string) => Promise<void>;
+  inviteUser: (
+    workspaceId: string,
+    email: string,
+    role: WorkspaceRole
+  ) => Promise<void>;
   reset: () => void;
 }
 
@@ -90,10 +94,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     }
   },
 
-  inviteUser: async (workspaceId: string, email: string) => {
+  inviteUser: async (
+    workspaceId: string,
+    email: string,
+    role: WorkspaceRole
+  ) => {
     set({ isLoading: true, error: null });
     try {
-      await workspaceApi.inviteUser(workspaceId, email);
+      await workspaceApi.inviteUser(workspaceId, email, role);
       set({ isLoading: false });
     } catch (err: unknown) {
       const message =

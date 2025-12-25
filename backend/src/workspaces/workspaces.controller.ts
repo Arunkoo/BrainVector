@@ -14,6 +14,7 @@ import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { type CustomRequest } from 'src/common/types/request.interface';
 import { InviteUserDto } from './dto/invite-user.dto';
+
 @Controller('workspace')
 @UseGuards(AuthGuard('jwt'))
 export class WorkspaceController {
@@ -57,9 +58,11 @@ export class WorkspaceController {
   async inviteUserToWorkspace(
     @Param('workspaceId') workspaceId: string,
     @Body() dto: InviteUserDto,
+    @Req() req: CustomRequest,
   ) {
     try {
       // Resolve email -> userId
+      const inviterId = req.user.userId;
       const user = await this.workspaceService.findUserByEmail(
         dto.invitedUserEmail,
       );
@@ -69,7 +72,9 @@ export class WorkspaceController {
 
       const newMembership = await this.workspaceService.inviteUserToWorkspace(
         workspaceId,
+        inviterId,
         user.id,
+        dto.role,
       );
 
       return { id: newMembership.user.id };

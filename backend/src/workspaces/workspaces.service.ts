@@ -1,13 +1,9 @@
-import {
-  ConflictException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { UserWithoutPassword } from 'src/types/userWithoutPasswordType';
+import { WorkspaceRole } from '@prisma/client';
 
 @Injectable()
 export class WorkspaceService {
@@ -112,49 +108,45 @@ export class WorkspaceService {
   // Inviting a new user to our workspace...
   async inviteUserToWorkspace(
     workspaceId: string,
+    inviterId: string,
     inviteUserId: string,
-    notify?: (userId: string, event: string, payload: any) => void, // optional notifier callback
+    role: WorkspaceRole,
   ) {
-    const invitedUserCacheKey = `user_workspace:${inviteUserId}`;
-    await this.cacheManager.del(invitedUserCacheKey);
-    console.log(
-      `[Cache Invalidation] Cleared workspace list for invited user ${inviteUserId}.`,
-    );
-
-    // Check if workspace exists
-    const workspaceExists = await this.prisma.workspace.findUnique({
-      where: { id: workspaceId },
-    });
-    if (!workspaceExists) {
-      throw new NotFoundException('Workspace not found');
-    }
-
-    // Check if user exists
-    const userExists = await this.prisma.user.findUnique({
-      where: { id: inviteUserId },
-    });
-    if (!userExists) {
-      throw new NotFoundException('Invited User not found');
-    }
-
-    // Check if user is already a member
-    const existingMembership = await this.prisma.workspaceMember.findFirst({
+    // 1️⃣ Check inviter membership
+    const inviterMembership = await this.prisma.workspaceMember.findFirst({
       where: {
-        userId: inviteUserId,
         WorkspaceId: workspaceId,
+        userId: inviterId,
       },
     });
-    if (existingMembership) {
-      throw new ConflictException(
-        'User is already a member of this workspace.',
-      );
+
+    if (!inviterMembership || inviterMembership.role === 'Viewer') {
+      throw new ConflictException('You are not allowed to invite users');
     }
 
-    // Create membership
-    const newMembership = await this.prisma.workspaceMember.create({
+    // 2️⃣ Prevent Owner invite
+    if (role === 'Owner') {
+      throw new ConflictException('Cannot invite user as Owner');
+    }
+
+    // 3️⃣ Prevent duplicate membership
+    const existingMembership = await this.prisma.workspaceMember.findFirst({
+      where: {
+        WorkspaceId: workspaceId,
+        userId: inviteUserId,
+      },
+    });
+
+    if (existingMembership) {
+      throw new ConflictException('User already exists in workspace');
+    }
+
+    // 4️⃣ Create membership (DEFAULT Viewer if frontend sends Viewer)
+    const membership = this.prisma.workspaceMember.create({
       data: {
         workspace: { connect: { id: workspaceId } },
         user: { connect: { id: inviteUserId } },
+        role: role ?? WorkspaceRole.Viewer, // ✅ SAFE DEFAULT
       },
       include: {
         user: {
@@ -162,29 +154,13 @@ export class WorkspaceService {
             id: true,
             name: true,
             email: true,
-            role: true,
-            createdAt: true,
-            updatedAt: true,
-          },
-        },
-        workspace: {
-          select: {
-            id: true,
-            name: true,
           },
         },
       },
     });
 
-    // Emit real-time notification (if callback provided)
-    if (notify) {
-      void notify(inviteUserId, 'workspaceInvite', {
-        workspaceId: workspaceId,
-        workspaceName: workspaceExists.name,
-        inviter: 'System', // you can pass actual inviter user here
-      });
-    }
-
-    return newMembership;
+    await this.cacheManager.del(`user_workspace:${inviterId}`);
+    await this.cacheManager.del(`user_workspace:${inviteUserId}`);
+    return membership;
   }
 }

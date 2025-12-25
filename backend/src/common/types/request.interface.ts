@@ -1,7 +1,7 @@
 import { Request } from 'express';
 
 // Define the structure of the user object that our JWT strategy attaches to the request.
-interface UserPayload {
+export interface UserPayload {
   userId: string;
   role: string;
 }

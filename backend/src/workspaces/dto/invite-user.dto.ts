@@ -1,7 +1,10 @@
-import { IsNotEmpty, IsEmail } from 'class-validator';
+import { IsEmail, IsEnum } from 'class-validator';
+import { WorkspaceRole } from '@prisma/client';
 
 export class InviteUserDto {
   @IsEmail()
-  @IsNotEmpty()
   invitedUserEmail: string;
+
+  @IsEnum(WorkspaceRole)
+  role: WorkspaceRole;
 }

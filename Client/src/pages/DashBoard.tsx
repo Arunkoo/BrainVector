@@ -29,6 +29,7 @@ const Dashboard: React.FC = () => {
 
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [roleFilter, setRoleFilter] = useState<WorkspaceRole | "all">("all");
+  const [inviteRole, setInviteRole] = useState<WorkspaceRole>("Viewer");
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -45,13 +46,12 @@ const Dashboard: React.FC = () => {
     if (!authChecking && user) {
       fetchWorkspaces();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authChecking, user?.id, fetchWorkspaces]);
+  }, [user, authChecking, user?.id, fetchWorkspaces]);
   const handleSendInvite = async (workspaceId: string, email: string) => {
     if (!email.trim()) return;
 
     try {
-      await inviteUser(workspaceId, email.trim());
+      await inviteUser(workspaceId, inviteEmail, inviteRole);
       await fetchWorkspaces();
       setInviteOpen(null);
       setInviteEmail("");
@@ -244,12 +244,23 @@ const Dashboard: React.FC = () => {
               placeholder="Email address"
               className="w-full border rounded-md px-3 py-2 text-sm"
             />
+            <select
+              value={inviteRole}
+              aria-label="inviteRole"
+              onChange={(e) => setInviteRole(e.target.value as WorkspaceRole)}
+              className="w-full border rounded-md px-3 py-2 text-sm mt-2"
+            >
+              <option value="Viewer">Viewer (read only)</option>
+              <option value="Editor">Editor (can edit)</option>
+              <option value="Admin">Admin (manage workspace)</option>
+            </select>
 
             <div className="flex justify-end gap-2 mt-4">
               <button
                 onClick={() => {
                   setInviteOpen(null);
                   setInviteEmail("");
+                  setInviteRole("Viewer");
                 }}
                 className="text-sm px-3 py-2 rounded-md hover:bg-muted"
               >
@@ -257,6 +268,7 @@ const Dashboard: React.FC = () => {
               </button>
 
               <button
+                type="button"
                 onClick={async () => handleSendInvite(inviteOpen!, inviteEmail)}
                 className="text-sm px-3 py-2 rounded-md bg-primary text-primary-foreground"
               >
