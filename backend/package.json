@@ -32,6 +32,7 @@
     "@nestjs/websockets": "^11.1.6",
     "@prisma/client": "^6.15.0",
     "@types/passport-jwt": "^4.0.1",
+    "@upstash/redis": "^1.36.0",
     "bcrypt": "^6.0.0",
     "cache-manager-redis-store": "^3.0.1",
     "class-transformer": "^0.5.1",

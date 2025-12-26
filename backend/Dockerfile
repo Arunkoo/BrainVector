@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
@@ -18,4 +18,4 @@ EXPOSE 3000
 
 # Run migrations and then start the application
 # `migrate deploy` is safe to run on every startup
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:dev"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]

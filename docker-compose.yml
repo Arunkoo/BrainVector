@@ -1,40 +1,19 @@
+version: "3.9"
+
 services:
   redis:
-    image: redis:6.2-alpine # Lightweight Redis image
+    image: redis:7-alpine
     container_name: brainvector-redis
     restart: always
-    # Expose the default Redis port
     ports:
       - "6379:6379"
-    volumes:
-      - redisdata:/data # Volume for Redis persistence
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256m
-  postgres:
-    image: postgres:14
-    restart: always
-    environment:
-      POSTGRES_USER: arun
-      POSTGRES_PASSWORD: 12arun
-      POSTGRES_DB: BrainVector
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: 1g
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U arun -d BrainVector"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
-      timeout: 5s
+      timeout: 3s
       retries: 5
-
+    volumes:
+      - redisdata:/data
   backend:
     build: ./backend
     container_name: brainvector-backend
@@ -44,24 +23,18 @@ services:
       - ./backend:/app
       - /app/node_modules
     environment:
-      DATABASE_URL: postgres://arun:12arun@postgres:5432/BrainVector
+      DATABASE_URL: "postgresql://postgres.wuqxzlwctbdcissjfgvq:8988307565%40B@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
       JWT_SECRET: EKTUHINIRANKAR
       NODE_ENV: development
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       PORT: 3000
+      HOST: 0.0.0.0
     depends_on:
-      postgres:
+      redis:
         condition: service_healthy
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
     restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@brainvector.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-    ports:
-      - "8080:80"
-    depends_on:
-      - postgres
+
   frontend:
     build:
       context: ./client
@@ -79,5 +52,4 @@ services:
     restart: always
 
 volumes:
-  pgdata:
   redisdata:
