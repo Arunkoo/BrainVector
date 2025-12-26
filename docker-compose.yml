@@ -23,7 +23,7 @@ services:
       - ./backend:/app
       - /app/node_modules
     environment:
-      DATABASE_URL: postgresql://postgres:8988307565%40B@db.wuqxzlwctbdcissjfgvq.supabase.co:5432/postgres
+      DATABASE_URL: postgresql://postgres.wuqxzlwctbdcissjfgvq:8988307565%40B@aws-1-ap-south-1.pooler.supabase.com:5432/postgres
 
       JWT_SECRET: EKTUHINIRANKAR
       NODE_ENV: development
