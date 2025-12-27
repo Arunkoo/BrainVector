@@ -18,4 +18,4 @@ EXPOSE 3000
 
 # Run migrations and then start the application
 # `migrate deploy` is safe to run on every startup
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
+CMD ["npm", "run", "start:prod"]
