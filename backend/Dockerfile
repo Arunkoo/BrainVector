@@ -6,6 +6,9 @@ WORKDIR /app
 COPY package*.json ./
 
 
+COPY prisma ./prisma
+
+
 RUN npm install
 
 
@@ -14,8 +17,6 @@ COPY . .
 
 RUN npm run build
 
-# Expose port
 EXPOSE 3000
 
-# Start production server
 CMD ["npm", "run", "start:prod"]
