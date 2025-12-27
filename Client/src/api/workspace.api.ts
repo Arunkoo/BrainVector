@@ -40,8 +40,7 @@ export interface CreateWorkspaceDto {
 }
 
 const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL || "http://localhost:3000/api/workspace",
+  baseURL: `${import.meta.env.VITE_API_URL}/api/workspace`,
   withCredentials: true,
 });
 
