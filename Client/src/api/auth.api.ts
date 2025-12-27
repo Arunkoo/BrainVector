@@ -2,7 +2,9 @@ import axios from "axios";
 import type { LoginDto, RegisterDto, User } from "../types";
 
 const api = axios.create({
-  baseURL: import.meta.env.Vite_API_URL || "http://localhost:3000/api/auth",
+  baseURL:
+    import.meta.env.Vite_API_URL ||
+    "https://brainvector-backend.onrender.com/api/auth",
   withCredentials: true,
 });
 

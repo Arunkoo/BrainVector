@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   //enbaling cors..
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: ['https://brainvector-frontend.onrender.com'],
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowHeaders: 'Content-Type, Accept',
