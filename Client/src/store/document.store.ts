@@ -52,7 +52,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
   fetchAll: async (workspaceId) => {
     set({ isLoading: true, error: null });
     try {
-      const docs = await documentApi.fetchALL(workspaceId);
+      const docs = await documentApi.fetchAll(workspaceId);
       set({ list: docs, isLoading: false });
     } catch (err) {
       set({ error: extractError(err), isLoading: false });
