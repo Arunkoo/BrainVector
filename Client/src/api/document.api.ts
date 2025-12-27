@@ -1,11 +1,4 @@
-import axios from "axios";
-
-const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    "https://brainvector-backend.onrender.com/api",
-  withCredentials: true,
-});
+import { api } from "../lib/api";
 
 export interface CreateDocumentDto {
   title: string;
@@ -43,7 +36,7 @@ export const documentApi = {
     return res.data;
   },
 
-  fetchALL: async (workspaceId: string): Promise<DocumentType[]> => {
+  fetchAll: async (workspaceId: string): Promise<DocumentType[]> => {
     const res = await api.get(`/workspace/${workspaceId}/document`);
     return res.data;
   },

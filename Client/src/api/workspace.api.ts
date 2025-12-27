@@ -1,4 +1,4 @@
-import axios from "axios";
+import { api } from "../lib/api";
 
 export type WorkspaceRole = "Owner" | "Admin" | "Editor" | "Viewer";
 
@@ -6,9 +6,6 @@ export interface WorkspaceUser {
   id: string;
   name: string | null;
   email: string;
-  role?: string;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface Workspace {
@@ -17,16 +14,13 @@ export interface Workspace {
   ownerId: string;
   createdAt: string;
   updatedAt: string;
-  // owner is present in list API, but not needed on frontend right now
 }
 
 export interface WorkspaceMember {
   id: string;
   role: WorkspaceRole;
   userId: string;
-  WorkspaceId: string;
-  createdAt: string;
-  updatedAt: string;
+  workspaceId: string;
   user?: WorkspaceUser;
   workspace: Workspace;
 }
@@ -39,30 +33,21 @@ export interface CreateWorkspaceDto {
   name: string;
 }
 
-const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    "https://brainvector-backend.onrender.com/api/workspace",
-  withCredentials: true,
-});
-
 export const workspaceApi = {
-  // GET /workspace -> WorkspaceMember[]
   getUserWorkspaces: async (): Promise<WorkspaceMember[]> => {
-    const res = await api.get<WorkspaceMember[]>("/");
+    const res = await api.get("/workspace");
     return res.data;
   },
 
-  // Assuming backend returns workspace + members here:
   getWorkspaceById: async (id: string): Promise<WorkspaceWithMembers> => {
-    const res = await api.get<WorkspaceWithMembers>(`/${id}`);
+    const res = await api.get(`/workspace/${id}`);
     return res.data;
   },
 
   createWorkspace: async (
     dto: CreateWorkspaceDto
   ): Promise<WorkspaceWithMembers> => {
-    const res = await api.post<WorkspaceWithMembers>("/", dto);
+    const res = await api.post("/workspace", dto);
     return res.data;
   },
 
@@ -70,16 +55,16 @@ export const workspaceApi = {
     id: string,
     name: string
   ): Promise<WorkspaceWithMembers> => {
-    const res = await api.put<WorkspaceWithMembers>(`/${id}`, { name });
+    const res = await api.patch(`/workspace/${id}`, { name });
     return res.data;
   },
 
   deleteWorkspace: async (id: string): Promise<void> => {
-    await api.delete(`/${id}`);
+    await api.delete(`/workspace/${id}`);
   },
 
   leaveWorkspace: async (id: string): Promise<void> => {
-    await api.post(`/${id}/leave`);
+    await api.post(`/workspace/${id}/leave`);
   },
 
   inviteUser: async (
@@ -87,7 +72,7 @@ export const workspaceApi = {
     inviteEmail: string,
     role: WorkspaceRole
   ): Promise<void> => {
-    await api.post(`/${workspaceId}/invite`, {
+    await api.post(`/workspace/${workspaceId}/invite`, {
       invitedUserEmail: inviteEmail,
       role,
     });
