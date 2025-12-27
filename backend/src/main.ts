@@ -5,14 +5,16 @@ import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  //enbaling cors..
+
+  // Enable CORS for frontend
   app.enableCors({
-    origin: 'https://brainvector-frontend.onrender.com/',
+    origin: 'https://brainvector-frontend.onrender.com',
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowHeaders: 'Content-Type, Accept',
+    allowedHeaders: 'Content-Type, Accept',
   });
-  //enable dto validation globally
+
+  // Enable global validation for DTOs
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({
@@ -21,7 +23,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
   app.use(cookieParser());
+
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 bootstrap().catch((err) => {
