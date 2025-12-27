@@ -25,7 +25,15 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { user, token } = await this.authservice.register(dto);
-    res.cookie('jwt', token, { httpOnly: true, sameSite: 'lax' });
+    const isProd = process.env.NODE_ENV === 'production';
+
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: isProd, // required for SameSite=None
+      sameSite: isProd ? 'none' : 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
     return user;
   }
 
@@ -35,13 +43,25 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { user, token } = await this.authservice.login(dto);
-    res.cookie('jwt', token, { httpOnly: true, sameSite: 'lax' });
+    const isProd = process.env.NODE_ENV === 'production';
+
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: isProd, // required for SameSite=None
+      sameSite: isProd ? 'none' : 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
     return user;
   }
 
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('jwt');
+    res.clearCookie('jwt', {
+      path: '/',
+      sameSite: 'none',
+      secure: true,
+    });
     return { message: 'Logged Out' };
   }
 

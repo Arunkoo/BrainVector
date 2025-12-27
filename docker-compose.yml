@@ -24,7 +24,7 @@ services:
       DATABASE_URL: postgresql://postgres.wuqxzlwctbdcissjfgvq:8988307565%40B@aws-1-ap-south-1.pooler.supabase.com:5432/postgres
 
       JWT_SECRET: EKTUHINIRANKAR
-      NODE_ENV: development
+      NODE_ENV: production
       REDIS_HOST: redis
       REDIS_PORT: 6379
       PORT: 3000
